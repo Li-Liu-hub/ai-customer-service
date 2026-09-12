@@ -18,21 +18,23 @@ public interface ConversationService {
   Conversation createConversation();
 
   /**
-   * 在指定会话下记录一条用户消息，返回生成的消息行（用于后续回填AI回复）。
+   * 在指定会话下记录一条用户消息（含Token估算），返回生成的消息行（用于后续回填AI回复）。
    *
    * @param conversationId 会话ID
    * @param userText 用户消息内容
+   * @param userTokens 用户消息的Token数（由上层估算）
    * @return 已落库的消息实体
    */
-  Message saveUserMessage(Long conversationId, String userText);
+  Message saveUserMessage(Long conversationId, String userText, int userTokens);
 
   /**
-   * 回填某条消息的AI回复。
+   * 回填某条消息的AI回复与回复Token数。
    *
    * @param messageId 消息ID
    * @param aiText AI回复内容
+   * @param aiTokens AI回复的Token数（由上层估算）
    */
-  void completeAssistantMessage(Long messageId, String aiText);
+  void completeAssistantMessage(Long messageId, String aiText, int aiTokens);
 
   /**
    * 按会话ID查询会话，不存在时抛出业务异常。
@@ -50,6 +52,14 @@ public interface ConversationService {
    * @return 活跃消息列表
    */
   List<Message> getMessagesAfter(Long conversationId, Long afterId);
+
+  /**
+   * 查询最近更新的会话列表。
+   *
+   * @param limit 最大返回数量（内部夹紧到1到200）
+   * @return 按更新时间倒序的会话列表
+   */
+  List<Conversation> listRecentConversations(int limit);
 
   /**
    * 写入新的会话摘要与摘要水位线（水位线只进不退）。

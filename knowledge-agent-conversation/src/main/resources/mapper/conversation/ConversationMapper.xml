@@ -13,6 +13,14 @@
     <result property="summaryTokens" column="summary_tokens"/>
   </resultMap>
 
+  <!-- 按更新时间倒序查询最近会话，供会话列表接口使用。 -->
+  <select id="selectRecent" resultMap="ConversationResultMap">
+    SELECT id, title, create_time, update_time, summary, summarized_until_id, summary_tokens
+    FROM conversation
+    ORDER BY update_time DESC
+    LIMIT #{limit}
+  </select>
+
   <!-- 写入摘要与水位线：水位线只进不退；update_time 仅用于会话列表排序与活跃刷新。 -->
   <update id="updateSummaryAndWatermark">
     UPDATE conversation

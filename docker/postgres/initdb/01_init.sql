@@ -32,7 +32,7 @@ CREATE INDEX IF NOT EXISTS idx_conversation_update
 
 -- ------------------------------------------------------------
 -- 消息表：一行一轮（用户消息与AI回复同存一行）。
--- user_tokens / ai_tokens 写入时落库，预算计算时直接累加，不重算。
+-- user_tokens / ai_tokens 由上层估算后在写入时落库；预算计算优先使用落库值，缺失时回退重算。
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS message (
   id              BIGINT      PRIMARY KEY,

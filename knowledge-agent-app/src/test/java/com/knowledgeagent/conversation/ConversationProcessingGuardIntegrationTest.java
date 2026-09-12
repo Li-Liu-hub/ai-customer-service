@@ -39,12 +39,38 @@ class ConversationProcessingGuardIntegrationTest {
     conversationService.completeProcessing(conversation.getId());
   }
 
+  /** 最近会话列表包含新建会话且按更新时间倒序。 */
+  @Test
+  void recentConversationsIncludeNewestFirst() {
+    Conversation conversation = conversationService.createConversation();
+
+    List<Conversation> recent = conversationService.listRecentConversations(50);
+
+    assertFalse(recent.isEmpty());
+    assertEquals(conversation.getId(), recent.get(0).getId(), "最新创建的会话应排在首位");
+  }
+
+  /** 消息Token在写入时落库（用户消息估算值与AI回复值）。 */
+  @Test
+  void messageTokensArePersistedOnWrite() {
+    Conversation conversation = conversationService.createConversation();
+    Message userMessage = conversationService.saveUserMessage(conversation.getId(), "用户消息", 3);
+    conversationService.completeAssistantMessage(userMessage.getId(), "AI回复", 7);
+
+    List<Message> persisted = conversationService.getMessagesAfter(conversation.getId(), null);
+
+    assertEquals(1, persisted.size());
+    assertEquals(3, persisted.get(0).getUserTokens().intValue(), "用户消息Token应落库");
+    assertEquals("AI回复", persisted.get(0).getAiMessage());
+    assertEquals(7, persisted.get(0).getAiTokens().intValue(), "AI回复Token应落库");
+  }
+
   /** 消息按ID水位线回放，水位线写入后只进不退。 */
   @Test
   void messagesAreReplayedByWatermarkAndWatermarkOnlyAdvances() {
     Conversation conversation = conversationService.createConversation();
-    Message first = conversationService.saveUserMessage(conversation.getId(), "第一条");
-    Message second = conversationService.saveUserMessage(conversation.getId(), "第二条");
+    Message first = conversationService.saveUserMessage(conversation.getId(), "第一条", 1);
+    Message second = conversationService.saveUserMessage(conversation.getId(), "第二条", 1);
 
     List<Message> all = conversationService.getMessagesAfter(conversation.getId(), null);
     assertEquals(2, all.size(), "无水位线时回放全部消息");

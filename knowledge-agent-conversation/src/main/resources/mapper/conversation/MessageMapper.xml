@@ -23,7 +23,8 @@
 
   <update id="updateAssistantMessage">
     UPDATE message
-    SET ai_message = #{aiMessage}
+    SET ai_message = #{aiMessage},
+        ai_tokens  = #{aiTokens}
     WHERE id = #{id}
   </update>
 

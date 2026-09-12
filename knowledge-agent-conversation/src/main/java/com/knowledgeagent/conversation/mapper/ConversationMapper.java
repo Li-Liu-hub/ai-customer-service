@@ -3,12 +3,21 @@ package com.knowledgeagent.conversation.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.knowledgeagent.conversation.pojo.entity.Conversation;
 import java.time.OffsetDateTime;
+import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /** 会话表数据访问，复杂SQL见ConversationMapper.xml。 */
 @Mapper
 public interface ConversationMapper extends BaseMapper<Conversation> {
+
+  /**
+   * 按更新时间倒序查询最近的会话列表。
+   *
+   * @param limit 最大返回数量
+   * @return 最近会话列表（按更新时间倒序）
+   */
+  List<Conversation> selectRecent(@Param("limit") int limit);
 
   /**
    * 写入新的会话摘要与摘要水位线（水位线只进不退）。

@@ -38,19 +38,20 @@ public class ConversationServiceImpl implements ConversationService {
   }
 
   @Override
-  public Message saveUserMessage(Long conversationId, String userText) {
+  public Message saveUserMessage(Long conversationId, String userText, int userTokens) {
     Message message = new Message();
     message.setId(IdWorker.getId());
     message.setConversationId(conversationId);
     message.setUserMessage(userText);
     message.setCreateTime(OffsetDateTime.now());
+    message.setUserTokens(userTokens);
     messageMapper.insert(message);
     return message;
   }
 
   @Override
-  public void completeAssistantMessage(Long messageId, String aiText) {
-    messageMapper.updateAssistantMessage(messageId, aiText);
+  public void completeAssistantMessage(Long messageId, String aiText, int aiTokens) {
+    messageMapper.updateAssistantMessage(messageId, aiText, aiTokens);
   }
 
   @Override
@@ -65,6 +66,12 @@ public class ConversationServiceImpl implements ConversationService {
   @Override
   public List<Message> getMessagesAfter(Long conversationId, Long afterId) {
     return messageMapper.selectAfterId(conversationId, afterId);
+  }
+
+  @Override
+  public List<Conversation> listRecentConversations(int limit) {
+    int clampedLimit = Math.max(1, Math.min(limit, 200));
+    return conversationMapper.selectRecent(clampedLimit);
   }
 
   @Override

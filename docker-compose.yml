@@ -20,38 +20,6 @@ services:
       retries: 10
     restart: unless-stopped
 
-  redis:
-    image: redis:7.4-alpine
-    container_name: knowledge-agent-redis
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    restart: unless-stopped
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: knowledge-agent-rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-team_collaboration_agent}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-123456}
-    ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-    restart: unless-stopped
-
   backend-app:
     build:
       context: .
@@ -61,20 +29,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     environment:
       DEBUG: "true"
       SERVER_PORT: 8081
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-team_collaboration_agent}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-team_collaboration_agent}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-123456}
-      REDIS_HOST: redis
-      RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-team_collaboration_agent}
-      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-123456}
       CHAT_MODEL_BASE_URL: ${CHAT_MODEL_BASE_URL:-https://api.minimaxi.com}
       CHAT_MODEL_API_KEY: ${CHAT_MODEL_API_KEY:-}
       CHAT_MODEL_NAME: ${CHAT_MODEL_NAME:-MiniMax-M2.7}
@@ -90,6 +50,4 @@ services:
 
 volumes:
   postgres_data:
-  redis_data:
-  rabbitmq_data:
   app_storage:

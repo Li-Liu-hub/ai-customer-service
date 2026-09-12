@@ -21,15 +21,6 @@ spring:
     password: ${POSTGRES_PASSWORD:change-me}
     driver-class-name: org.postgresql.Driver
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    username: ${RABBITMQ_USER:team_collaboration_agent}
-    password: ${RABBITMQ_PASSWORD:123456}
-
   servlet:
     multipart:
       max-file-size: 50MB
@@ -41,7 +32,9 @@ spring:
         protocol: STATELESS
         name: knowledge-agent-mcp
         version: 0.1.0
-        tool-callback-converter: false
+        # 暴露服务端 @McpTool 注解工具（/mcp 对外提供知识库工具）；客户端工具回调已由
+        # autoconfigure.exclude 隔离，不会经此开关泄漏到 /mcp
+        tool-callback-converter: true
         stateless:
           mcp-endpoint: /mcp
       client:

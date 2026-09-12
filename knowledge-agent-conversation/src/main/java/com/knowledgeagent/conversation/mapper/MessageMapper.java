@@ -21,10 +21,12 @@ public interface MessageMapper extends BaseMapper<Message> {
       @Param("conversationId") Long conversationId, @Param("afterId") Long afterId);
 
   /**
-   * 回填某条消息的AI回复。
+   * 回填某条消息的AI回复与回复Token数。
    *
    * @param id 消息ID
    * @param aiMessage AI回复内容
+   * @param aiTokens AI回复的Token数（由上层估算）
    */
-  void updateAssistantMessage(@Param("id") Long id, @Param("aiMessage") String aiMessage);
+  void updateAssistantMessage(
+      @Param("id") Long id, @Param("aiMessage") String aiMessage, @Param("aiTokens") int aiTokens);
 }

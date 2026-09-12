@@ -3,6 +3,8 @@ package com.knowledgeagent.ai.service.impl;
 import com.knowledgeagent.ai.config.ContextProperties;
 import com.knowledgeagent.ai.pojo.dto.ConversationChatRequest;
 import com.knowledgeagent.ai.pojo.dto.ConversationChatResponse;
+import com.knowledgeagent.ai.pojo.vo.ConversationMessageVO;
+import com.knowledgeagent.ai.pojo.vo.ConversationSummaryVO;
 import com.knowledgeagent.ai.service.ConversationChatService;
 import com.knowledgeagent.common.aop.OperationLog;
 import com.knowledgeagent.common.aop.OperationLogContext;
@@ -81,9 +83,10 @@ public class ConversationChatServiceImpl implements ConversationChatService {
       throw ConversationError.CONVERSATION_BUSY.exception();
     }
     try {
-      // 先落库本次用户消息，再以其晚于摘要水位线的活跃消息构建历史
+      // 先落库本次用户消息（含Token估算），再以其晚于摘要水位线的活跃消息构建历史
       Message currentUser =
-          conversationService.saveUserMessage(conversation.getId(), request.getMessage());
+          conversationService.saveUserMessage(
+              conversation.getId(), request.getMessage(), countTokens(request.getMessage()));
       List<Message> active =
           conversationService.getMessagesAfter(
               conversation.getId(), conversation.getSummarizedUntilId());
@@ -103,12 +106,52 @@ public class ConversationChatServiceImpl implements ConversationChatService {
       if (answer == null || answer.isBlank()) {
         throw ConversationError.AI_RESPONSE_EMPTY.exception();
       }
-      conversationService.completeAssistantMessage(currentUser.getId(), answer);
+      conversationService.completeAssistantMessage(
+          currentUser.getId(), answer, countTokens(answer));
       maybeGenerateTitle(conversation, request.getMessage());
       return new ConversationChatResponse(conversation.getId(), answer);
     } finally {
       conversationService.completeProcessing(conversation.getId());
     }
+  }
+
+  /**
+   * 查询最近更新的会话列表。
+   *
+   * @param limit 最大返回数量
+   * @return 会话摘要列表（按更新时间倒序）
+   */
+  @Override
+  public List<ConversationSummaryVO> listConversations(int limit) {
+    return conversationService.listRecentConversations(limit).stream()
+        .map(
+            conversation ->
+                new ConversationSummaryVO(
+                    conversation.getId(),
+                    conversation.getTitle(),
+                    conversation.getCreateTime(),
+                    conversation.getUpdateTime()))
+        .toList();
+  }
+
+  /**
+   * 查询指定会话的历史消息（按时间正序）。
+   *
+   * @param conversationId 会话ID
+   * @return 历史消息列表
+   */
+  @Override
+  public List<ConversationMessageVO> listMessages(Long conversationId) {
+    conversationService.getConversation(conversationId);
+    return conversationService.getMessagesAfter(conversationId, null).stream()
+        .map(
+            message ->
+                new ConversationMessageVO(
+                    message.getId(),
+                    message.getUserMessage(),
+                    message.getAiMessage(),
+                    message.getCreateTime()))
+        .toList();
   }
 
   /**
@@ -283,13 +326,21 @@ public class ConversationChatServiceImpl implements ConversationChatService {
   }
 
   /**
-   * 估算单轮消息（用户消息+AI回复）的Token数。
+   * 估算单轮消息（用户消息+AI回复）的Token数：优先使用落库的Token值，缺失时回退实时估算。
    *
    * @param message 消息轮
    * @return 估算Token数
    */
   private static int messageTokens(Message message) {
-    return countTokens(message.getUserMessage()) + countTokens(message.getAiMessage());
+    int userTokens = message.getUserTokens() == null ? 0 : message.getUserTokens();
+    if (userTokens <= 0) {
+      userTokens = countTokens(message.getUserMessage());
+    }
+    int aiTokens = message.getAiTokens() == null ? 0 : message.getAiTokens();
+    if (aiTokens <= 0 && message.getAiMessage() != null) {
+      aiTokens = countTokens(message.getAiMessage());
+    }
+    return userTokens + aiTokens;
   }
 
   /**
