@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.knowledgeagent.systemlog.mapper.SystemLogMapper">
+
+  <resultMap id="SystemLogResultMap"
+             type="com.knowledgeagent.systemlog.pojo.entity.SystemLog">
+    <id property="id" column="id"/>
+    <result property="requestId" column="request_id"/>
+    <result property="operationType" column="operation_type"/>
+    <result property="operationDetail" column="operation_detail"/>
+    <result property="promptTokens" column="prompt_tokens"/>
+    <result property="completionTokens" column="completion_tokens"/>
+    <result property="modelName" column="model_name"/>
+    <result property="status" column="status"/>
+    <result property="errorCode" column="error_code"/>
+    <result property="errorReason" column="error_reason"/>
+    <result property="latencyMs" column="latency_ms"/>
+    <result property="createTime" column="create_time"/>
+  </resultMap>
+
+  <insert id="insert">
+    INSERT INTO system_log (
+      id,
+      request_id,
+      operation_type,
+      operation_detail,
+      latency_ms,
+      prompt_tokens,
+      completion_tokens,
+      model_name,
+      status,
+      error_code,
+      error_reason,
+      create_time
+    ) VALUES (
+      #{id},
+      #{requestId},
+      #{operationType},
+      CAST(#{operationDetail} AS jsonb),
+      #{latencyMs},
+      #{promptTokens},
+      #{completionTokens},
+      #{modelName},
+      #{status},
+      #{errorCode},
+      #{errorReason},
+      #{createTime}
+    )
+  </insert>
+
+  <select id="selectLogs" resultMap="SystemLogResultMap">
+    SELECT
+      id,
+      request_id,
+      operation_type,
+      operation_detail,
+      prompt_tokens,
+      completion_tokens,
+      model_name,
+      status,
+      error_code,
+      error_reason,
+      latency_ms,
+      create_time
+    FROM system_log
+    <where>
+      <if test="id != null">
+        id = #{id}
+      </if>
+      <if test="requestId != null and requestId != ''">
+        AND request_id = #{requestId}
+      </if>
+      <if test="operationType != null and operationType != ''">
+        AND operation_type = #{operationType}
+      </if>
+      <if test="status != null and status != ''">
+        AND status = #{status}
+      </if>
+    </where>
+    ORDER BY create_time DESC
+    LIMIT #{limit}
+  </select>
+
+</mapper>

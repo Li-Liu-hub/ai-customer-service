@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledgeagent.conversation.mapper.MessageMapper">
+
+  <resultMap id="MessageResultMap" type="com.knowledgeagent.conversation.pojo.entity.Message">
+    <id property="id" column="id"/>
+    <result property="conversationId" column="conversation_id"/>
+    <result property="userMessage" column="user_message"/>
+    <result property="aiMessage" column="ai_message"/>
+    <result property="createTime" column="create_time"/>
+    <result property="userTokens" column="user_tokens"/>
+    <result property="aiTokens" column="ai_tokens"/>
+  </resultMap>
+
+  <select id="selectAfterTime" resultMap="MessageResultMap">
+    SELECT id, conversation_id, user_message, ai_message, create_time, user_tokens, ai_tokens
+    FROM message
+    WHERE conversation_id = #{conversationId}
+      AND create_time &gt; #{afterTime}
+    ORDER BY create_time ASC
+  </select>
+
+  <update id="updateAssistantMessage">
+    UPDATE message
+    SET ai_message = #{aiMessage}
+    WHERE id = #{id}
+  </update>
+
+</mapper>

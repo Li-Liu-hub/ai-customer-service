@@ -1,0 +1,71 @@
+{
+  "setId": "rag_hard_return_policy",
+  "domain": "退货规则",
+  "description": "退货规则域高难度测试集：数字近邻陷阱（7日退货/15日换货）、双平台例外清单对比、PLUS会员特例、完好标准细节、京豆扣除、第三方物流签收判定、赠品折价、否定清单",
+  "cases": [
+    {
+      "caseId": "rph_001",
+      "question": "京东买的电饭煲用了十来天坏了，还能找京东换一个新的吗",
+      "groundTruth": "京东承诺自客户收到商品之日起7日内可以退货、15日内可以换货；质量问题经检测确认支持换货，第10天在15日换货期限内。",
+      "retrievalMustContain": ["15日|15 日", "换货"],
+      "answerMustContain": ["15", "换"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rph_002",
+      "question": "京东和淘宝不支持七天无理由退货的东西都有哪些？说个大概",
+      "groundTruth": "两家共同排除：定作类、鲜活易腐、在线下载或拆封的音像制品/数字化商品、报纸期刊；淘宝还额外排除服务类商品、个人闲置、二手竞拍商品和人体用药。",
+      "retrievalMustContain": ["鲜活易腐"],
+      "answerMustContain": ["鲜活易腐", "用药|闲置|二手|服务类"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rph_003",
+      "question": "我是PLUS会员，买错了不想要，退回去的快递费也要我自己出吗",
+      "groundTruth": "个人原因退货在商品完好前提下支持7日内退货，非PLUS会员返回运费由客户承担；PLUS会员不受限制，所有运费由京东承担。",
+      "retrievalMustContain": ["PLUS"],
+      "answerMustContain": ["京东承担|不用.*承担|无需.*承担"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rph_004",
+      "question": "淘宝买的手机已经激活系统了，还能走七天无理由退货吗",
+      "groundTruth": "手机等3C数码的完好标准要求进网许可证未损坏、系统未激活、未浸液；已激活视为商品不完好，不能七天无理由退货。",
+      "retrievalMustContain": ["激活"],
+      "answerMustContain": ["不", "退"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rph_005",
+      "question": "之前评价晒单得的京豆已经花掉了，现在退货会怎么处理",
+      "groundTruth": "商品退货时需扣除购买时通过评价或晒单获得的京豆及相应优惠；如账户京豆已使用，则从商品退款金额中相应扣除。",
+      "retrievalMustContain": ["京豆"],
+      "answerMustContain": ["退款.*扣|扣除"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rph_006",
+      "question": "京东上买的东西是圆通给我发的，退货期限从哪天开始算",
+      "groundTruth": "非京东配送的订单按第三方物流平台显示的实际到货日期为准；若第三方不能有效返回签收日期，由京东客服根据距离等因素与客户人工确认实际收货日期。",
+      "retrievalMustContain": ["到货日期|签收日期"],
+      "answerMustContain": ["第三方|物流"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rph_007",
+      "question": "淘宝退货时赠品弄丢了还能退吗，会不会不给我退",
+      "groundTruth": "赠品遗失或破损、发票遗失不影响商品退货；赠品破损或遗失作折价处理，发票遗失由买家承担相应税款。",
+      "retrievalMustContain": ["赠品"],
+      "answerMustContain": ["退", "折价"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rph_008",
+      "question": "哪些情况京东是直接不给办退换货的？",
+      "groundTruth": "任何非京东出售的商品（序列号不符）、过保商品（超过三包保修期）、未经授权维修/误用/进液/事故等人为原因损坏或涂改标贴序号、无法提供发票保修卡等三包凭证、其他依法不应办理退换货的。",
+      "retrievalMustContain": ["序列号|不予办理"],
+      "answerMustContain": ["序列号|过保|三包"],
+      "answerMustNotContain": []
+    }
+  ]
+}

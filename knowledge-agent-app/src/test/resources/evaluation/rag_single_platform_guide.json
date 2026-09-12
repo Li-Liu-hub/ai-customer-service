@@ -1,0 +1,127 @@
+{
+  "setId": "rag_platform_guide",
+  "domain": "平台操作指南",
+  "description": "平台操作域纯RAG测试集：问题覆盖售后申请入口、退款去向、到账周期、运费补偿等操作流程",
+  "cases": [
+    {
+      "caseId": "pg_001",
+      "question": "我想在京东申请退货，操作入口在哪里",
+      "groundTruth": "点击【我的京东】，选择【返修退换货】，进入申请售后页面后点击商品信息下方的【申请】按钮，选择售后类型填写信息后提交。",
+      "retrievalMustContain": ["返修退换货"],
+      "answerMustContain": ["我的京东", "申请"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_002",
+      "question": "售后那个申请按钮是灰的按不了是什么情况",
+      "groundTruth": "申请按钮为灰色无法点击说明该商品已超过售后周期。",
+      "retrievalMustContain": ["灰色"],
+      "answerMustContain": ["售后周期"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_003",
+      "question": "为什么我的订单页面上没有申请售后的地方",
+      "groundTruth": "可能原因：商品配送途中、网络或系统问题、已超出售后申请时间、虚拟订单（手机充值、机票等）无法申请。",
+      "retrievalMustContain": ["虚拟订单"],
+      "answerMustContain": ["配送", "超过"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_004",
+      "question": "京东退款一般多久能到账",
+      "groundTruth": "退款到账周期为京东退款处理周期加上银行退款处理周期，款项原路退回。",
+      "retrievalMustContain": ["到账周期"],
+      "answerMustContain": ["银行"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_005",
+      "question": "我是用微信付的钱，退款会退到微信里吗",
+      "groundTruth": "微信支付退款退回支付银行卡或微信零钱。",
+      "retrievalMustContain": ["微信"],
+      "answerMustContain": ["零钱", "银行卡"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_006",
+      "question": "白条买的的东西退款退到哪里",
+      "groundTruth": "白条退款优先恢复白条额度，如已还白条款项，退款返还到还款的银行卡中。",
+      "retrievalMustContain": ["白条"],
+      "answerMustContain": ["额度"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_007",
+      "question": "用京东E卡付的钱申请退款，钱退回哪里",
+      "groundTruth": "京东E卡支付退款无法直接兑换成现金，会在1个工作日左右返还至支付的京东E卡内。",
+      "retrievalMustContain": ["E卡"],
+      "answerMustContain": ["1个工作日|一个工作日"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_008",
+      "question": "退款成功了平台会通知我吗",
+      "groundTruth": "京东处理成功会短信告知，银行是否发送短信提醒取决于银行系统。",
+      "retrievalMustContain": ["短信"],
+      "answerMustContain": ["短信"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_009",
+      "question": "我不是PLUS会员，因为自己不想要了退货，运费怎么算",
+      "groundTruth": "客户原因（误购、7天无理由退货等）退换货，非PLUS会员由客户承担运费。",
+      "retrievalMustContain": ["非PLUS"],
+      "answerMustContain": ["自己承担|您承担|客户承担|买家承担|自行承担"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_010",
+      "question": "商品还在保修期内但是坏了要维修，来回运费谁出",
+      "groundTruth": "商品故障等原因，保修期内运费由京东承担，保修期外需要客户承担；人为损坏的运费需要客户承担。",
+      "retrievalMustContain": ["维修"],
+      "answerMustContain": ["保修期"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_011",
+      "question": "退货的时候可以让京东上门来取件吗",
+      "groundTruth": "可以，商品返回京东分上门取件和快递至京东两种方式；上门取件费用按收费标准收取，退货收取上门取件费用时从退款中直接扣减。",
+      "retrievalMustContain": ["上门取件"],
+      "answerMustContain": ["扣"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_012",
+      "question": "京东说他们出运费让我先垫付快递费寄回去，之后钱怎么给我",
+      "groundTruth": "如京东承担运费，寄回时先垫付，售后服务完成后按《退换货逆向运费补偿标准》以京东余额方式返还。",
+      "retrievalMustContain": ["垫付"],
+      "answerMustContain": ["京东余额"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_013",
+      "question": "订单还没确认收货呢，东西有问题能先申请售后吗",
+      "groundTruth": "订单未完成状态下无法申请售后；第三方卖家商品可在收到商品后点击售后页面申请，点击已收到货、继续申请完成订单。",
+      "retrievalMustContain": ["订单未完成"],
+      "answerMustContain": ["无法|不能"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_014",
+      "question": "公司账户转账付的款，退款会退回公司账户吗",
+      "groundTruth": "公司转账、支票、现金支付一般退回京东账户，如需退至对公账户或银行可在申请退款页面选择退款方式。",
+      "retrievalMustContain": ["公司转账"],
+      "answerMustContain": ["京东账户"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pg_015",
+      "question": "上门取件的服务范围是哪些地方，港澳台能取吗",
+      "groundTruth": "《退换货逆向运费补偿标准》仅适用于收货地址在中国大陆区域，暂不包含港澳台区域。",
+      "retrievalMustContain": ["港澳台"],
+      "answerMustContain": ["不包含|不含|暂不"],
+      "answerMustNotContain": []
+    }
+  ]
+}

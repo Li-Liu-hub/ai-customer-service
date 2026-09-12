@@ -1,0 +1,127 @@
+{
+  "setId": "rag_return_policy",
+  "domain": "退货规则",
+  "description": "退货规则域纯RAG测试集：问题覆盖京东/淘宝退货时限、运费、无理由退货例外、完好标准等",
+  "cases": [
+    {
+      "caseId": "rp_001",
+      "question": "在京东买了东西最多几天内能退？",
+      "groundTruth": "京东承诺自客户收到商品之日起7日内可以退货，15日内可以换货。",
+      "retrievalMustContain": ["7日", "退货"],
+      "answerMustContain": ["7"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_002",
+      "question": "收到的快递盒子破了里面的东西也摔坏了，这种能退吗运费谁出？",
+      "groundTruth": "到货物流损属于京东原因，支持7日内退货15日内换货，不收取返回运费。",
+      "retrievalMustContain": ["物流损"],
+      "answerMustContain": ["京东承担|不收取|不收"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_003",
+      "question": "我就是买错了不想要了，退货运费要我出吗",
+      "groundTruth": "个人原因退货在商品完好前提下支持7日内退货，返回运费由客户承担；PLUS会员由京东承担。",
+      "retrievalMustContain": ["客户承担"],
+      "answerMustContain": ["自己承担|您承担|客户承担|买家承担|自行承担"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_004",
+      "question": "在网上买的蛋糕鲜花这类东西能无理由退吗",
+      "groundTruth": "鲜活易腐类商品不适用7天无理由退货（京东和淘宝均不支持）。",
+      "retrievalMustContain": ["鲜活易腐"],
+      "answerMustContain": ["不", "退"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_005",
+      "question": "淘宝七天无理由具体是怎么算时间的？从哪天开始算",
+      "groundTruth": "自物流显示签收商品的次日零时起计算，满168小时为七天。",
+      "retrievalMustContain": ["168"],
+      "answerMustContain": ["168", "签收"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_006",
+      "question": "淘宝上买的衣服卖家说包邮，退货的时候邮费谁出",
+      "groundTruth": "商品卖家包邮的，买家仅承担退回邮费。",
+      "retrievalMustContain": ["包邮"],
+      "answerMustContain": ["退回", "买家"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_007",
+      "question": "之前在京东晒单拿的京豆，退货的时候会怎么样",
+      "groundTruth": "商品退货时需扣除购买时通过评价或晒单获得的京豆及相应优惠，如京豆已使用则从退款金额中相应扣除。",
+      "retrievalMustContain": ["京豆"],
+      "answerMustContain": ["扣"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_008",
+      "question": "手机自己root过还给刷了别的系统，还能走京东售后吗",
+      "groundTruth": "未经授权的改动造成的商品质量问题或撕毁涂改标贴、机器序号、防伪标记的不予办理退换货。",
+      "retrievalMustContain": ["改动"],
+      "answerMustContain": ["不"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_009",
+      "question": "在淘宝买了个刻了我名字的定制礼物，不想要了可以七天无理由吗",
+      "groundTruth": "买家定作的定制类商品不支持七天无理由退货。",
+      "retrievalMustContain": ["定制"],
+      "answerMustContain": ["不"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_010",
+      "question": "淘宝退货对商品状态有什么要求？包装拆过了算不算完好的",
+      "groundTruth": "商品应保持原有品质功能、配件齐全，基于查验需要打开包装或合理调试不影响完好；包装应完整。",
+      "retrievalMustContain": ["完好"],
+      "answerMustContain": ["完好"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_011",
+      "question": "京东买东西上面写的拆封了就不能退的软件下载类商品，规则是什么",
+      "groundTruth": "在线下载或者拆封的音像制品、计算机软件等数字化商品不适用7天无理由退货。",
+      "retrievalMustContain": ["数字化商品"],
+      "answerMustContain": ["不", "退"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_012",
+      "question": "淘宝买家的赠品找不到了还能退货吗",
+      "groundTruth": "赠品遗失不影响商品退货，但赠品破损或遗失作折价处理。",
+      "retrievalMustContain": ["赠品"],
+      "answerMustContain": ["不影响", "折价"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_013",
+      "question": "京东上判定我哪天收到货是按什么算的",
+      "groundTruth": "京东快递配送或自提以实际签收日期为准；非京东配送按第三方物流显示的实际到货日期为准。",
+      "retrievalMustContain": ["签收"],
+      "answerMustContain": ["签收"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_014",
+      "question": "淘宝卖家一直拖着不给退货地址怎么办",
+      "groundTruth": "卖家收到退货通知后应及时且最晚不超过系统限定时间提供真实准确的退货地址等联系信息。",
+      "retrievalMustContain": ["退货地址"],
+      "answerMustContain": ["系统", "时间"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "rp_015",
+      "question": "从夺宝岛抢到的东西不想要了能退吗",
+      "groundTruth": "个人原因退货支持7天内退货，但夺宝岛售出商品除外。",
+      "retrievalMustContain": ["夺宝岛"],
+      "answerMustContain": ["不"],
+      "answerMustNotContain": []
+    }
+  ]
+}

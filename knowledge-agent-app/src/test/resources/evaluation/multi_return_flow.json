@@ -1,0 +1,73 @@
+{
+  "setId": "multi_return_flow",
+  "domain": "退货规则",
+  "description": "退货流程多轮场景：测试指代消解、跨轮信息复用、条件判断与操作追问",
+  "cases": [
+    {
+      "caseId": "mrf_001",
+      "scenario": "京东质量问题退货全流程（指代+跨轮运费判断+操作）",
+      "turns": [
+        "我在京东买了个蓝牙耳机，花了299",
+        "用了两天发现左边没声音了，这算质量问题吧？",
+        "这种能退货吗？",
+        "那退货的运费谁出？",
+        "具体怎么申请呢？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 2, "type": "retrieval_grounding", "assertion": "回答应基于京东质量问题的退换规则（7天退货15天换货），而非泛泛而谈", "mustContain": ["7", "退"]},
+        {"atTurnIndex": 3, "type": "cross_turn_memory", "assertion": "应结合第2轮的质量问题背景，回答非客户原因退货运费由京东承担", "mustContain": ["京东承担|不收取|不收|免收|无需承担"]},
+        {"atTurnIndex": 4, "type": "follow_up", "assertion": "应给出京东申请售后的操作步骤（我的京东-返修退换货-申请）", "mustContain": ["返修退换货", "我的京东"]}
+      ]
+    },
+    {
+      "caseId": "mrf_002",
+      "scenario": "淘宝七天无理由连环追问（包邮运费+时限计算+赠品）",
+      "turns": [
+        "我在淘宝买了条连衣裙，618做活动买的",
+        "穿不了想退，吊牌什么的都没拆，店家当时说包邮的",
+        "这种情况我要自己出邮费吗？",
+        "七天无理由具体怎么算的？我是上周五签收的",
+        "对了，当时送的丝巾赠品找不到了，还让退吗？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 2, "type": "retrieval_grounding", "assertion": "基于淘宝规则：卖家包邮的买家仅承担退回邮费", "mustContain": ["退回", "买家"]},
+        {"atTurnIndex": 3, "type": "retrieval_grounding", "assertion": "应说明自签收次日零时起满168小时为七天", "mustContain": ["168"]},
+        {"atTurnIndex": 4, "type": "retrieval_grounding", "assertion": "赠品遗失不影响退货但作折价处理", "mustContain": ["折价", "不影响"]}
+      ]
+    },
+    {
+      "caseId": "mrf_003",
+      "scenario": "多商品退货条件对比（跨商品信息区分）",
+      "turns": [
+        "帮我看看这两件东西能不能退：一个是京东买的手机，一个是淘宝订的生日蛋糕",
+        "手机是昨天到的，蛋糕还没发货呢",
+        "手机我不想要了，能无理由退吗？",
+        "那蛋糕呢？不想要了",
+        "蛋糕不退的话手机退了运费谁出？我平时老在京东买但不是会员"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 2, "type": "retrieval_grounding", "assertion": "手机个人原因退货：商品完好前提下7天内可退，非PLUS会员运费自付", "mustContain": ["7"]},
+        {"atTurnIndex": 3, "type": "retrieval_grounding", "assertion": "蛋糕属于鲜活易腐类商品不支持七天无理由退货", "mustContain": ["鲜活易腐|不支持退货|不能退|无法退"]},
+        {"atTurnIndex": 4, "type": "cross_turn_memory", "assertion": "应记住用户非PLUS会员，回答个人原因退货运费由买家承担", "mustContain": ["自己承担|您承担|客户承担|买家承担"]}
+      ]
+    },
+    {
+      "caseId": "mrf_004",
+      "scenario": "长对话后早期信息保留（压缩保留测试）",
+      "turns": [
+        "我上周在京东买了台笔记本电脑，花了八千多，订单号我都留着",
+        "买来主要给孩子上网课用",
+        "用了一周屏幕出现竖线了",
+        "我还顺带买了个鼠标垫，那个倒没问题",
+        "电脑这情况检测的话要去哪里？",
+        "如果检测出来是质量问题，除了退货还有别的选择吗？",
+        "换货的话有时限要求吗？",
+        "再问下最早说的那个电脑，要是退货成功的话当时评价拿的京豆会怎么处理？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 6, "type": "cross_turn_memory", "assertion": "应结合第3轮屏幕竖线的质量问题背景，回答15日内可换货", "mustContain": ["15"]},
+        {"atTurnIndex": 7, "type": "compression_retention", "assertion": "长对话后期仍应记住第1轮的笔记本电脑背景，回答退货扣除评价晒单获得的京豆，已使用则从退款中扣除", "mustContain": ["京豆", "扣"]}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "setId": "multi_platform_operation",
+  "domain": "平台操作指南",
+  "description": "平台操作多轮场景：测试操作步骤引导、异常排查、退款路径追问",
+  "cases": [
+    {
+      "caseId": "mpo_001",
+      "scenario": "售后申请操作引导（入口+异常+解决）",
+      "turns": [
+        "东西坏了想退，京东上在哪申请售后？",
+        "我点进去看了，那个申请按钮是灰的",
+        "那是超过时间了？可我才买了不到一个星期啊",
+        "订单还在路上呢还没签收",
+        "那我等签收了再申请，顺便问下退款一般几天到账？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 0, "type": "retrieval_grounding", "assertion": "应给出我的京东-返修退换货-申请的操作路径", "mustContain": ["返修退换货", "我的京东"]},
+        {"atTurnIndex": 1, "type": "retrieval_grounding", "assertion": "灰色按钮说明已超过售后周期", "mustContain": ["售后周期"]},
+        {"atTurnIndex": 3, "type": "retrieval_grounding", "assertion": "配送途中无法申请售后，可尝试取消订单或等签收后申请", "mustContain": ["配送途中|配送中"]},
+        {"atTurnIndex": 4, "type": "retrieval_grounding", "assertion": "退款到账周期为京东处理周期加银行处理周期", "mustContain": ["银行"]}
+      ]
+    },
+    {
+      "caseId": "mpo_002",
+      "scenario": "支付方式与退款路径（跨轮记忆支付方式）",
+      "turns": [
+        "我那个订单一半用京东E卡一半用白条付的",
+        "现在要退款了，钱分别退到哪里？",
+        "白条那部分我上个月已经还清了",
+        "那E卡的钱能提现出来吗？",
+        "顺便问下用公司账户转账付的另一单，退款怎么走？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 1, "type": "retrieval_grounding", "assertion": "E卡退款返还至E卡内约1个工作日；白条退款优先恢复额度", "mustContain": ["额度", "E卡"]},
+        {"atTurnIndex": 2, "type": "cross_turn_memory", "assertion": "结合已还清白条的情况，退款应返还到还款的银行卡", "mustContain": ["银行卡"]},
+        {"atTurnIndex": 3, "type": "retrieval_grounding", "assertion": "E卡支付退款无法直接兑换成现金", "mustContain": ["无法兑换|不能提现|无法提现|不能兑现|无法直接兑换"]},
+        {"atTurnIndex": 4, "type": "retrieval_grounding", "assertion": "公司转账一般退回京东账户，可在申请页面选择退款至对公账户", "mustContain": ["京东账户"]}
+      ]
+    },
+    {
+      "caseId": "mpo_003",
+      "scenario": "寄回商品方式选择（上门取件+垫付补偿+会员差异）",
+      "turns": [
+        "质检通过了让我把货寄回去，怎么寄？",
+        "上门取件的话费用怎么算？",
+        "那要是走快递自己寄，运费找谁报销？",
+        "我是PLUS会员，之前说的这些费用有区别吗？",
+        "最后确认下，我人在香港，这些寄回政策适用吗？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 0, "type": "retrieval_grounding", "assertion": "两种方式：上门取件和快递至京东", "mustContain": ["上门取件", "快递"]},
+        {"atTurnIndex": 1, "type": "retrieval_grounding", "assertion": "上门取件费用按收费标准收取，退货时从退款中直接扣减", "mustContain": ["扣"]},
+        {"atTurnIndex": 2, "type": "retrieval_grounding", "assertion": "京东承担运费时先垫付，售后完成后按补偿标准以京东余额返还", "mustContain": ["垫付", "京东余额"]},
+        {"atTurnIndex": 4, "type": "retrieval_grounding", "assertion": "逆向运费补偿标准仅适用中国大陆，不含港澳台", "mustContain": ["港澳台", "大陆"]}
+      ]
+    },
+    {
+      "caseId": "mpo_004",
+      "scenario": "虚拟订单与异常排查（无法申请的组合判断）",
+      "turns": [
+        "帮我妈充话费的订单想退款，怎么找不到申请售后的入口？",
+        "还有一单是机票，也是这样",
+        "那正常的实物订单什么情况下也申请不了？",
+        "我有个朋友订单一直显示配送中，他那单是不是也退不了？",
+        "虚拟的退不了那话费充错了怎么办，只能认了吗？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 0, "type": "retrieval_grounding", "assertion": "手机充值订单属于虚拟订单，无法申请售后", "mustContain": ["虚拟订单|虚拟商品"]},
+        {"atTurnIndex": 2, "type": "retrieval_grounding", "assertion": "实物订单申请不了的四种情况：配送途中、网络系统问题、超出售后时间、虚拟订单", "mustContain": ["配送"]},
+        {"atTurnIndex": 3, "type": "retrieval_grounding", "assertion": "配送途中无法申请售后，可尝试取消订单", "mustContain": ["取消"]}
+      ]
+    }
+  ]
+}

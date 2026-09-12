@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledgeagent.knowledge.mapper.KnowledgeChunkMapper">
+
+  <!-- 批量写入切片：embedding为向量字面量、metadata为JSON字符串，均在SQL侧CAST。 -->
+  <insert id="batchInsert">
+    INSERT INTO knowledge_chunk (id, file_id, chunk_index, content, embedding, text_length, token_count, metadata)
+    VALUES
+    <foreach collection="chunks" item="c" separator=",">
+      (#{c.id}, #{c.fileId}, #{c.chunkIndex}, #{c.content},
+       CAST(#{c.embedding} AS vector),
+       #{c.textLength}, #{c.tokenCount},
+       <choose>
+         <when test="c.metadata != null">CAST(#{c.metadata} AS jsonb)</when>
+         <otherwise>NULL</otherwise>
+       </choose>)
+    </foreach>
+  </insert>
+
+  <!-- 按文件删除全部切片。 -->
+  <delete id="deleteByFileId">
+    DELETE FROM knowledge_chunk
+    WHERE file_id = #{fileId}
+  </delete>
+
+  <!--
+    向量相似检索：内层子查询利用HNSW索引按余弦距离取最近候选（HNSW无法先过滤后检索，
+    故候选量放大以抵消外层知识库过滤造成的损耗），外层JOIN文件表过滤知识库后截取topK。
+    注意：resultType按位置映射record构造器，列顺序必须与KnowledgeChunkVO字段顺序完全一致。
+  -->
+  <select id="selectSimilar" resultType="com.knowledgeagent.knowledge.pojo.vo.KnowledgeChunkVO">
+    SELECT t.chunkId,
+           t.fileId,
+           f.title       AS fileTitle,
+           f.kb_name     AS kbName,
+           f.source      AS source,
+           t.chunkIndex,
+           t.content,
+           t.tokenCount,
+           t.distance
+    FROM (
+      SELECT c.id AS chunkId, c.file_id AS fileId, c.chunk_index AS chunkIndex,
+             c.content AS content, c.token_count AS tokenCount,
+             (c.embedding &lt;=&gt; CAST(#{queryVector} AS vector)) AS distance
+      FROM knowledge_chunk c
+      ORDER BY c.embedding &lt;=&gt; CAST(#{queryVector} AS vector)
+      LIMIT #{candidateLimit}
+    ) t
+    JOIN knowledge_file f ON f.id = t.fileId
+    WHERE (#{kbName,jdbcType=VARCHAR} IS NULL OR f.kb_name = #{kbName,jdbcType=VARCHAR})
+    ORDER BY t.distance ASC
+    LIMIT #{topK}
+  </select>
+
+  <!--
+    关键词粗筛（混合检索词法通道）：把查询词组数组展开为行，逐词ILIKE命中，
+    按各分块命中词数降序返回ID。grams为PostgreSQL text[]数组字面量字符串。
+  -->
+  <select id="selectByKeywordGrams" resultType="java.lang.Long">
+    SELECT c.id
+    FROM knowledge_chunk c
+    JOIN knowledge_file f ON f.id = c.file_id
+    CROSS JOIN unnest(CAST(#{grams} AS text[])) AS g(word)
+    WHERE (#{kbName,jdbcType=VARCHAR} IS NULL OR f.kb_name = #{kbName,jdbcType=VARCHAR})
+      AND c.content ILIKE ('%' || word || '%')
+    GROUP BY c.id
+    ORDER BY COUNT(*) DESC, c.id ASC
+    LIMIT #{limit}
+  </select>
+
+  <!-- 按ID列表取回分块详情（含来源信息），用于混合检索融合后的结果回填；列顺序与VO字段一致。 -->
+  <select id="selectByIds" resultType="com.knowledgeagent.knowledge.pojo.vo.KnowledgeChunkVO">
+    SELECT c.id          AS chunkId,
+           c.file_id     AS fileId,
+           f.title       AS fileTitle,
+           f.kb_name     AS kbName,
+           f.source      AS source,
+           c.chunk_index AS chunkIndex,
+           c.content,
+           c.token_count AS tokenCount,
+           NULL::float8  AS distance
+    FROM knowledge_chunk c
+    JOIN knowledge_file f ON f.id = c.file_id
+    WHERE c.id IN
+    <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+  </select>
+</mapper>

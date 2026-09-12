@@ -1,0 +1,63 @@
+{
+  "setId": "rag_hard_platform_guide",
+  "domain": "平台操作指南",
+  "description": "平台操作域高难度测试集：灰色按钮原因、虚拟订单售后限制、白条/E卡退款去向、配送途中取消、垫付运费补偿方式、满返券部分退货",
+  "cases": [
+    {
+      "caseId": "pgh_001",
+      "question": "京东app里售后申请按钮是灰色的点不动，什么情况",
+      "groundTruth": "申请按钮为灰色无法点击，说明该商品已超过售后周期，无法再申请售后。",
+      "retrievalMustContain": ["灰色"],
+      "answerMustContain": ["超过.*周期|售后周期|超时"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pgh_002",
+      "question": "手机充话费的订单想申请售后怎么弄",
+      "groundTruth": "虚拟订单无法申请售后，如手机充值订单、机票订单等。",
+      "retrievalMustContain": ["虚拟"],
+      "answerMustContain": ["无法|不能|不支持"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pgh_003",
+      "question": "用京东白条分期买的鞋退货了，钱退到哪里",
+      "groundTruth": "白条退款优先恢复白条额度；如已还白条款项，退款会返还到还款的银行卡中。",
+      "retrievalMustContain": ["白条"],
+      "answerMustContain": ["白条", "额度|银行卡"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pgh_004",
+      "question": "京东E卡支付的订单退货，钱能退成现金吗",
+      "groundTruth": "京东E卡支付退款无法直接兑换成现金，会在1个工作日左右返还至支付时使用的京东E卡内。",
+      "retrievalMustContain": ["E卡|E 卡"],
+      "answerMustContain": ["不"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pgh_005",
+      "question": "订单还在配送途中我就不想要了，直接申请售后行吗",
+      "groundTruth": "商品在配送途中无法申请售后，可尝试取消订单。",
+      "retrievalMustContain": ["配送途中"],
+      "answerMustContain": ["取消"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pgh_006",
+      "question": "京东承担运费让我先把寄回的快递费垫上，这钱后面还给我吗",
+      "groundTruth": "京东承担运费时需先垫付，售后服务完成后按《退换货逆向运费补偿标准》以京东余额方式返还，仅适用于收货地址在中国大陆区域（不含港澳台）。",
+      "retrievalMustContain": ["垫付"],
+      "answerMustContain": ["余额|返还"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "pgh_007",
+      "question": "用电器门店满返券买的两个东西只退一个，券会退吗",
+      "groundTruth": "京东电器门店满返券和运营商券将在全部用券商品完成退货后才可退券，部分退货不支持退券。",
+      "retrievalMustContain": ["满返券|退券"],
+      "answerMustContain": ["不"],
+      "answerMustNotContain": []
+    }
+  ]
+}

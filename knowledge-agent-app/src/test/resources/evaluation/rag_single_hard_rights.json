@@ -1,0 +1,63 @@
+{
+  "setId": "rag_hard_user_rights",
+  "domain": "用户权益",
+  "description": "用户权益域高难度测试集：三倍赔偿与五百元下限、耐用商品六个月举证责任倒置、定作商品例外、退款七日时限、店堂告示无效、平台连带责任、预付款追回",
+  "cases": [
+    {
+      "caseId": "urh_001",
+      "question": "商家有欺诈行为我能要求多赔吗？最少能赔多少",
+      "groundTruth": "经营者提供商品或服务有欺诈行为的，应增加赔偿消费者受到的损失，金额为价款或费用的三倍；不足五百元的按五百元赔偿。",
+      "retrievalMustContain": ["三倍"],
+      "answerMustContain": ["三倍|3倍", "500|五百"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "urh_002",
+      "question": "买的洗衣机用了四个月出毛病了，商家扯皮说不是质量问题，该谁来证明",
+      "groundTruth": "洗衣机等耐用商品，消费者自接受商品之日起六个月内发现瑕疵发生争议的，由经营者承担有关瑕疵的举证责任。",
+      "retrievalMustContain": ["举证"],
+      "answerMustContain": ["经营者|商家", "举证"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "urh_003",
+      "question": "网上找商家定做的柜子不想要了，能用七天无理由退货退掉吗",
+      "groundTruth": "网络销售商品消费者有权自收到商品之日起七日内退货且无需说明理由，但消费者定作的商品除外，定制柜子不适用无理由退货。",
+      "retrievalMustContain": ["定作"],
+      "answerMustContain": ["不", "退"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "urh_004",
+      "question": "网购退货商家最晚多久必须把货款退给我",
+      "groundTruth": "经营者应当自收到退回商品之日起七日内返还消费者支付的商品价款。",
+      "retrievalMustContain": ["返还"],
+      "answerMustContain": ["七日|7日|七天|7天"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "urh_005",
+      "question": "店里贴着'商品售出概不退换'这种告示，是不是我就没法维权了",
+      "groundTruth": "经营者不得以格式条款、通知、声明、店堂告示等方式作出排除或限制消费者权利、减轻或免除经营者责任等不公平不合理的规定，此类内容无效。",
+      "retrievalMustContain": ["店堂告示|格式条款"],
+      "answerMustContain": ["无效"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "urh_006",
+      "question": "平台明明知道卖家在卖假货还不管，我受到损失能找平台赔吗",
+      "groundTruth": "网络交易平台提供者明知或应知销售者利用其平台侵害消费者合法权益、未采取必要措施的，依法与销售者承担连带责任，消费者可以要求平台赔偿。",
+      "retrievalMustContain": ["连带"],
+      "answerMustContain": ["连带"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "urh_007",
+      "question": "健身房收了年费之后没按约定提供服务，我的钱怎么办",
+      "groundTruth": "经营者以预收款方式提供商品或服务的，应按约定提供；未按约定提供的，应按消费者要求履行约定或退回预付款，并承担预付款的利息及消费者必须支付的合理费用。",
+      "retrievalMustContain": ["预收款|预付款"],
+      "answerMustContain": ["退回|利息"],
+      "answerMustNotContain": []
+    }
+  ]
+}

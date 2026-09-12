@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledgeagent.conversation.mapper.ConversationMapper">
+
+  <resultMap id="ConversationResultMap" type="com.knowledgeagent.conversation.pojo.entity.Conversation">
+    <id property="id" column="id"/>
+    <result property="title" column="title"/>
+    <result property="createTime" column="create_time"/>
+    <result property="updateTime" column="update_time"/>
+    <result property="summary" column="summary"/>
+    <result property="summarizedUntilId" column="summarized_until_id"/>
+    <result property="summaryTokens" column="summary_tokens"/>
+  </resultMap>
+
+  <update id="updateSummary">
+    UPDATE conversation
+    SET summary     = #{summary},
+        update_time = #{boundaryTime}
+    WHERE id = #{id}
+  </update>
+
+</mapper>

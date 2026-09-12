@@ -1,0 +1,13 @@
+target/
+.idea/
+.vscode/
+*.iml
+.env
+logs/
+*.log
+.DS_Store
+tmp-img/
+
+eval-data/
+knowledge-agent-app/storage/
+kb-docs/customer-service-scripts-main/dist/

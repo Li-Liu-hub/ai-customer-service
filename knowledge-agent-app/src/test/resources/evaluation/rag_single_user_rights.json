@@ -1,0 +1,127 @@
+{
+  "setId": "rag_user_rights",
+  "domain": "用户权益",
+  "description": "用户权益域纯RAG测试集：问题覆盖消保法九项权利、七天无理由、三倍赔偿、平台责任、个人信息保护等",
+  "cases": [
+    {
+      "caseId": "ur_001",
+      "question": "网上买了个东西一共就花了三十块钱，商家欺诈的话能赔多少",
+      "groundTruth": "经营者有欺诈行为的，增加赔偿金额为价款三倍；不足五百元的为五百元。三十元的三倍仅九十元，故按五百元赔。",
+      "retrievalMustContain": ["五百"],
+      "answerMustContain": ["500|五百"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_002",
+      "question": "消费者权益保护法管的是哪些人？",
+      "groundTruth": "为生活消费需要购买、使用商品或者接受服务的消费者。",
+      "retrievalMustContain": ["生活消费"],
+      "answerMustContain": ["生活消费"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_003",
+      "question": "在网上商城买到有质量问题的东西，平台说商家跑了找不到人，平台要负责吗",
+      "groundTruth": "网络交易平台不能提供销售者真实名称、地址和有效联系方式的，消费者可以向平台要求赔偿。",
+      "retrievalMustContain": ["网络交易平台"],
+      "answerMustContain": ["平台", "赔偿"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_004",
+      "question": "商家总是给我发促销短信很烦，法律上怎么说的",
+      "groundTruth": "未经消费者同意或请求，经营者不得向其发送商业性信息；收集使用个人信息需经消费者同意并严格保密。",
+      "retrievalMustContain": ["商业性信息"],
+      "answerMustContain": ["同意"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_005",
+      "question": "网购七天无理由退货，退回去的邮费一般是谁付",
+      "groundTruth": "退回商品的运费由消费者承担，经营者和消费者另有约定的按照约定。",
+      "retrievalMustContain": ["运费"],
+      "answerMustContain": ["消费者承担|买家承担|您承担|自己承担|自行承担"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_006",
+      "question": "买的吹风机漏电把我电伤了，我可以要求谁赔",
+      "groundTruth": "因商品缺陷造成人身、财产损害的，可以向销售者要求赔偿，也可以向生产者要求赔偿。",
+      "retrievalMustContain": ["缺陷"],
+      "answerMustContain": ["生产者|厂家|制造商", "销售者|卖家|商家"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_007",
+      "question": "跟商家吵架了谈不拢，除了打官司还有什么办法维权",
+      "groundTruth": "可与经营者协商和解、请求消协调解、向行政部门投诉、根据仲裁协议提请仲裁、向法院起诉。",
+      "retrievalMustContain": ["协商和解"],
+      "answerMustContain": ["投诉", "调解"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_008",
+      "question": "商家的小票背面印着最终解释权归本店所有，这种条款有效吗",
+      "groundTruth": "经营者不得以格式条款等方式作出排除或限制消费者权利、减轻或免除经营者责任等不公平不合理规定，该内容无效。",
+      "retrievalMustContain": ["格式条款"],
+      "answerMustContain": ["无效"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_009",
+      "question": "看广告买的东西和宣传完全不一样，广告发布方有责任吗",
+      "groundTruth": "因虚假广告受到损害可向经营者要求赔偿；广告经营者、发布者不能提供经营者真实名称、地址和有效联系方式的，应当承担赔偿责任。",
+      "retrievalMustContain": ["虚假广告"],
+      "answerMustContain": ["广告"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_010",
+      "question": "法律上说的消费者的知情权是什么意思",
+      "groundTruth": "消费者享有知悉购买、使用的商品或接受的服务的真实情况的权利。",
+      "retrievalMustContain": ["真实情况"],
+      "answerMustContain": ["真实"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_011",
+      "question": "在展会买的按摩椅坏了，展会都撤了该找谁",
+      "groundTruth": "展销会结束或柜台租赁期满后，可以向展销会的举办者、柜台的出租者要求赔偿。",
+      "retrievalMustContain": ["展销会"],
+      "answerMustContain": ["举办者|主办方|出租者"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_012",
+      "question": "12315投诉之后有关部门多久必须给答复",
+      "groundTruth": "有关行政部门应当自收到投诉之日起七个工作日内予以处理并告知消费者。",
+      "retrievalMustContain": ["七个工作日|7个工作日"],
+      "answerMustContain": ["七个工作日|7个工作日"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_013",
+      "question": "消保法一共给了消费者哪些权利？简单列一下",
+      "groundTruth": "人身财产安全权、知情权、自主选择权、公平交易权、依法求偿权、依法结社权、获得知识权、人格尊严与个人信息受保护权、监督权。",
+      "retrievalMustContain": ["自主选择"],
+      "answerMustContain": ["知情", "公平交易"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_014",
+      "question": "农民买化肥种子这类东西受消保法保护吗",
+      "groundTruth": "农民购买、使用直接用于农业生产的生产资料，参照消费者权益保护法执行。",
+      "retrievalMustContain": ["农业生产"],
+      "answerMustContain": ["参照"],
+      "answerMustNotContain": []
+    },
+    {
+      "caseId": "ur_015",
+      "question": "经营者收集了我的手机号和地址能随便给别人吗",
+      "groundTruth": "经营者对收集的消费者个人信息必须严格保密，不得泄露、出售或非法向他人提供。",
+      "retrievalMustContain": ["泄露"],
+      "answerMustContain": ["不"],
+      "answerMustNotContain": []
+    }
+  ]
+}

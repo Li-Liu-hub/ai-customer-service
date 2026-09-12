@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledgeagent.knowledge.mapper.KnowledgeFileMapper">
+
+  <!-- 按知识库聚合文件数与分块数，供Agent工具枚举知识库。 -->
+  <select id="aggregateBases" resultType="com.knowledgeagent.knowledge.pojo.vo.KnowledgeBaseVO">
+    SELECT kb_name        AS kbName,
+           COUNT(*)       AS fileCount,
+           SUM(chunk_count) AS chunkCount
+    FROM knowledge_file
+    GROUP BY kb_name
+    ORDER BY kb_name
+  </select>
+
+  <!-- 按知识库查询文件列表；kbName为null时查询全部。 -->
+  <select id="selectFiles" resultType="com.knowledgeagent.knowledge.pojo.vo.KnowledgeFileVO">
+    SELECT id             AS fileId,
+           kb_name        AS kbName,
+           title,
+           document_type  AS documentType,
+           source,
+           file_format    AS fileFormat,
+           file_size      AS fileSize,
+           chunk_count    AS chunkCount,
+           embedding_model AS embeddingModel,
+           create_time    AS createTime
+    FROM knowledge_file
+    WHERE (#{kbName,jdbcType=VARCHAR} IS NULL OR kb_name = #{kbName,jdbcType=VARCHAR})
+    ORDER BY create_time DESC
+  </select>
+</mapper>

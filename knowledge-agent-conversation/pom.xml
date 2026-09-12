@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-parent</artifactId><version>0.1.0-SNAPSHOT</version><relativePath>../pom.xml</relativePath></parent>
+  <artifactId>knowledge-agent-conversation</artifactId>
+  <name>knowledge-agent-conversation</name>
+  <description>会话模块：会话创建、消息持久化、历史回调与摘要水位的存储能力，通过接口暴露给上层ai模块编排。</description>
+  <dependencies>
+    <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-common</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
+    <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>${lombok.version}</version><optional>true</optional></dependency>
+  </dependencies>
+</project>

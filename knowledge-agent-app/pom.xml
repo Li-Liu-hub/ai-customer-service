@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-parent</artifactId><version>0.1.0-SNAPSHOT</version><relativePath>../pom.xml</relativePath></parent>
+  <artifactId>knowledge-agent-app</artifactId>
+  <name>knowledge-agent-app</name>
+  <description>启动聚合层：Spring Boot 入口与应用配置。</description>
+  <dependencies>
+    <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-common</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
+    <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-ai</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
+    <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-knowledge</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
+    <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-conversation</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
+    <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-mcpserver</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build><plugins>
+    <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><configuration><proc>full</proc></configuration></plugin>
+    <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><configuration><systemPropertyVariables><java.io.tmpdir>${project.build.directory}</java.io.tmpdir><knowledge.conversation.recovery-enabled>false</knowledge.conversation.recovery-enabled></systemPropertyVariables></configuration></plugin>
+    <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId><configuration><excludes><exclude><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId></exclude></excludes></configuration></plugin>
+  </plugins></build>
+</project>

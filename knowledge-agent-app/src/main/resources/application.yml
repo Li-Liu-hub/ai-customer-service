@@ -1,0 +1,121 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: TCA
+
+  # 本地开发可复制 .env.example 为 .env；同时兼容项目根目录与app模块目录两种启动工作目录
+  config.import: "optional:file:.env[.properties],optional:file:../.env[.properties]"
+
+  datasource:
+    # 默认指向docker容器（5433）；宿主5432被本机PostgreSQL 18服务占用，勿改回5432
+    url: ${DB_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5433}/${POSTGRES_DB:team_collaboration_agent}}
+    username: ${POSTGRES_USER:team_collaboration_agent}
+    password: ${POSTGRES_PASSWORD:change-me}
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    username: ${RABBITMQ_USER:team_collaboration_agent}
+    password: ${RABBITMQ_PASSWORD:123456}
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 55MB
+
+  ai:
+    mcp:
+      server:
+        protocol: STATELESS
+        name: knowledge-agent-mcp
+        version: 0.1.0
+        tool-callback-converter: false
+        stateless:
+          mcp-endpoint: /mcp
+
+    model:
+      chat: openai
+      embedding: openai
+      audio.speech: none
+      audio.transcription: none
+      image: none
+      moderation: none
+
+    openai:
+      chat:
+        # 本地 OpenAI 兼容模型服务，运行在 8080 端口；本地服务不校验key，用占位local
+        base-url: ${CHAT_MODEL_BASE_URL:http://localhost:8080}
+        completions-path: /v1/chat/completions
+        api-key: ${CHAT_MODEL_API_KEY:local}
+        options:
+          model: ${CHAT_MODEL_NAME:spark2.5}
+
+      embedding:
+        # 占位key仅为保证启动；做RAG入库前需替换为真实的 SiliconFlow key
+        base-url: ${EMBEDDING_MODEL_BASE_URL:https://api.siliconflow.cn}
+        api-key: ${EMBEDDING_MODEL_API_KEY:local}
+        options:
+          model: ${EMBEDDING_MODEL_NAME:BAAI/bge-m3}
+
+
+app:
+  ai:
+    # 模型上下文窗口（token），与本地 llama.cpp 启动参数 -c 65536 保持一致
+    context-window-tokens: 65536
+    # 摘要+活跃历史占窗口比例达到该值时触发压缩（codex 同款 90%）
+    compact-trigger-ratio: 0.9
+    # 压缩后「新摘要+剩余活跃」的目标占比（活跃侧预留一半，其余留给摘要，实际落点约15%-25%）
+    compact-target-ratio: 0.2
+
+  conversation:
+    title-max-length: 10
+
+  embedding:
+    model-name: BAAI/bge-m3
+    dimensions: 1024
+    batch-size: 32
+
+  rag:
+    # 检索默认返回分块数
+    default-top-k: 5
+    # 检索允许的最大返回分块数
+    max-top-k: 20
+    # HNSW候选放大倍数（抵消知识库过滤损耗）
+    oversample-factor: 5
+    # 调优开关：问题重写（大模型改写查询后再向量化）——实验组开启；基线分支关闭
+    query-rewrite-enabled: true
+    # 调优开关：向量+关键词混合检索（RRF融合）
+    hybrid-search-enabled: true
+    # 调优开关：专用重排模型结果重排（bge-reranker-v2-m3，本地 llama.cpp 8083）
+    rerank-enabled: true
+    # 送入重排的候选数量
+    rerank-candidates: 12
+    # 重排服务地址（OpenAI 兼容 /v1/rerank 接口）
+    rerank-base-url: ${RERANK_MODEL_BASE_URL:http://localhost:8083}
+    # 重排模型名称
+    rerank-model-name: ${RERANK_MODEL_NAME:bge-reranker-v2-m3}
+
+  text-chunk:
+    target-length: 1000
+    max-length: 1200
+    overlap-length: 100
+
+  file-validation:
+    max-file-size-bytes: 52428800
+    supported-extensions:
+      - pdf
+      - docx
+      - txt
+      - md
+    max-filename-length: 255
+    text-sample-size: 8192
+    max-zip-entries: 2048
+
+  file-storage:
+    root-directory: ${APP_FILE_STORAGE_ROOT:./storage}

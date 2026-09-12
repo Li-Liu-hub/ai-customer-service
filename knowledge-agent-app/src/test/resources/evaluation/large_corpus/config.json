@@ -1,0 +1,6 @@
+{
+  "kbName": "百度QA检索库",
+  "documentType": "QA_SET",
+  "corpusDir": "corpus_qa",
+  "label": "experiment_qa"
+}

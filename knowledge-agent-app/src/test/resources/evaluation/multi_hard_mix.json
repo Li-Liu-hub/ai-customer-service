@@ -1,0 +1,136 @@
+{
+  "setId": "multi_hard_mix",
+  "domain": "混合域",
+  "description": "多轮高难度测试集：双平台指代切换、话题切换后回归最初订单、8轮长对话信息保留（compression_retention）、会员与退货原因多条件叠加追问",
+  "cases": [
+    {
+      "caseId": "mh_001",
+      "scenario": "京东→淘宝指代切换+跨平台运费对比（指代消解+检索切换+条件对比）",
+      "turns": [
+        "在京东自营买的蓝牙耳机第五天一边没声音了，能退吗运费谁出",
+        "那要是在淘宝买的呢，也是这样吗",
+        "淘宝那个如果不包邮，退货邮费怎么算"
+      ],
+      "checkpoints": [
+        {
+          "atTurnIndex": 0,
+          "type": "retrieval_grounding",
+          "assertion": "回答应基于京东质量问题退换货规则：7日内退货15日内换货，质量问题不收取返回运费",
+          "mustContain": ["7|七", "退"]
+        },
+        {
+          "atTurnIndex": 1,
+          "type": "cross_turn_memory",
+          "assertion": "回答应识别'那要是在淘宝买的'指代蓝牙耳机退货场景，并基于淘宝七天无理由退货规则（自签收次日起168小时）回答",
+          "mustContain": ["淘宝", "7|七"]
+        },
+        {
+          "atTurnIndex": 2,
+          "type": "follow_up",
+          "assertion": "回答应说明淘宝未包邮或部分退货不满足包邮条件时，所有邮费由买家承担",
+          "mustContain": ["邮费", "买家|自己|承担"]
+        }
+      ]
+    },
+    {
+      "caseId": "mh_002",
+      "scenario": "退货→维权途径→投诉时限→回归最初订单（话题切换+回归记忆）",
+      "turns": [
+        "我在京东买了个加湿器，第三天就不出雾了，这种质量问题几天内能退",
+        "要是京东售后一直拖着不给我办，我有什么别的办法维权",
+        "打12315投诉的话他们多久必须处理",
+        "对了回到最开始的加湿器，它还在退货期限内吗我该在第几天之前申请"
+      ],
+      "checkpoints": [
+        {
+          "atTurnIndex": 0,
+          "type": "retrieval_grounding",
+          "assertion": "回答应基于京东质量问题7日内退货规则回答时限",
+          "mustContain": ["7|七", "退"]
+        },
+        {
+          "atTurnIndex": 1,
+          "type": "follow_up",
+          "assertion": "回答应给出消费者权益争议解决途径（协商和解/消协调解/行政部门投诉/仲裁/诉讼）",
+          "mustContain": ["投诉|消协|调解|诉讼"]
+        },
+        {
+          "atTurnIndex": 2,
+          "type": "retrieval_grounding",
+          "assertion": "回答应说明行政部门应自收到投诉之日起七个工作日内处理并告知消费者",
+          "mustContain": ["七个工作日|7个工作日"]
+        },
+        {
+          "atTurnIndex": 3,
+          "type": "cross_turn_memory",
+          "assertion": "回答应结合第1轮'第三天就不出雾'的信息，说明质量问题7日退货期限及当前仍在期限内",
+          "mustContain": ["7|七", "日|天"]
+        }
+      ]
+    },
+    {
+      "caseId": "mh_003",
+      "scenario": "8轮长对话信息保留：首轮埋入订单实体与会员身份，中间多轮跨域话题干扰，末轮追问最初订单（compression_retention）",
+      "turns": [
+        "我在京东买了个蓝牙耳机，用了五天发现左耳没声音，质量问题想退货，我不是PLUS会员",
+        "京东退货个人原因和质量问题在运费上有什么区别",
+        "淘宝上买东西一般多久内能无理由退",
+        "经营者有欺诈行为赔偿标准是什么",
+        "网购七日无理由退货哪些商品不适用",
+        "京东退款一般退回哪里",
+        "消费者协会能帮我做什么",
+        "回到最开始的那个耳机，我的退货申请还在期限内吗，运费要自己出吗"
+      ],
+      "checkpoints": [
+        {
+          "atTurnIndex": 7,
+          "type": "compression_retention",
+          "assertion": "回答应记住第1轮耳机已用五天且属质量问题，说明仍在7日退货期限内",
+          "mustContain": ["7|七", "日|天"]
+        },
+        {
+          "atTurnIndex": 7,
+          "type": "compression_retention",
+          "assertion": "回答应说明质量问题退货运费由京东承担，非PLUS会员也不例外",
+          "mustContain": ["京东承担|不.*承担|不用.*出"]
+        }
+      ]
+    },
+    {
+      "caseId": "mh_004",
+      "scenario": "退货原因×会员身份×京豆多条件叠加追问（条件组合推理）",
+      "turns": [
+        "京东退货的时限一般是多久",
+        "如果是我自己买错了不想要了呢，运费谁出？我不是PLUS会员",
+        "那我要是PLUS会员呢",
+        "退货的时候之前晒单得的京豆怎么办"
+      ],
+      "checkpoints": [
+        {
+          "atTurnIndex": 0,
+          "type": "retrieval_grounding",
+          "assertion": "回答应说明京东自收到商品之日起7日内可退货",
+          "mustContain": ["7|七", "退"]
+        },
+        {
+          "atTurnIndex": 1,
+          "type": "follow_up",
+          "assertion": "回答应说明非PLUS会员个人原因退货返回运费由客户自己承担",
+          "mustContain": ["自己承担|您承担|客户承担|买家承担"]
+        },
+        {
+          "atTurnIndex": 2,
+          "type": "cross_turn_memory",
+          "assertion": "回答应结合第2轮个人原因场景说明PLUS会员不受限制，所有运费由京东承担",
+          "mustContain": ["京东承担"]
+        },
+        {
+          "atTurnIndex": 3,
+          "type": "retrieval_grounding",
+          "assertion": "回答应说明退货需扣除评价晒单所获京豆及优惠，已使用则从退款金额中扣除",
+          "mustContain": ["扣"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "setId": "multi_rights_dispute",
+  "domain": "用户权益",
+  "description": "权益争议多轮场景：测试金额计算、平台责任、维权路径等跨轮法律咨询",
+  "cases": [
+    {
+      "caseId": "mrd_001",
+      "scenario": "假货三倍赔偿全流程（金额计算+平台责任+维权路径）",
+      "turns": [
+        "我在一个网店买了个充电宝，89块钱",
+        "用朋友的方法一查是假货，气死我了",
+        "能要求商家赔多少？",
+        "要是商家跑路找不到了呢，平台要管吗？",
+        "行，那我去投诉，应该找哪些部门？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 2, "type": "retrieval_grounding", "assertion": "欺诈三倍赔偿：89元三倍仅267元不足500元，按500元赔偿", "mustContain": ["500|五百"]},
+        {"atTurnIndex": 3, "type": "retrieval_grounding", "assertion": "平台不能提供销售者真实名称地址联系方式的，消费者可向平台要求赔偿", "mustContain": ["平台", "赔偿"]},
+        {"atTurnIndex": 4, "type": "retrieval_grounding", "assertion": "应列出协商和解、消协调解、行政部门投诉、仲裁、诉讼等途径", "mustContain": ["投诉", "调解"]}
+      ]
+    },
+    {
+      "caseId": "mrd_002",
+      "scenario": "缺陷商品人身损害（责任主体+追偿链条）",
+      "turns": [
+        "我买的电热水壶漏电，把我妈的手电麻了",
+        "去医院看了没什么大事，但我想追责",
+        "这种该找卖家还是厂家？",
+        "那如果卖家说是厂家的责任互相推呢？",
+        "对了，这个牌子之前还打过虚假广告，广告平台有责任吗？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 2, "type": "retrieval_grounding", "assertion": "商品缺陷造成损害可向销售者或生产者任一方要求赔偿", "mustContain": ["生产者", "销售者"]},
+        {"atTurnIndex": 3, "type": "retrieval_grounding", "assertion": "属于生产者责任的销售者赔偿后可向生产者追偿，消费者无需等待责任划分", "mustContain": ["追偿"]},
+        {"atTurnIndex": 4, "type": "retrieval_grounding", "assertion": "虚假广告：广告经营者发布者不能提供经营者真实信息时应承担赔偿责任", "mustContain": ["广告"]}
+      ]
+    },
+    {
+      "caseId": "mrd_003",
+      "scenario": "个人信息与骚扰短信（权利边界+投诉时限）",
+      "turns": [
+        "我注册了个购物APP，天天给我发促销短信",
+        "我都明确说了别发了还在发",
+        "这个违反法律吗？",
+        "那他们收集我手机号地址这些信息，能随便给第三方吗？",
+        "我去12315投诉了，一般多久会有回复？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 2, "type": "retrieval_grounding", "assertion": "未经消费者同意或请求不得发送商业性信息", "mustContain": ["同意"]},
+        {"atTurnIndex": 3, "type": "retrieval_grounding", "assertion": "个人信息必须严格保密，不得泄露、出售或非法向他人提供", "mustContain": ["泄露"]},
+        {"atTurnIndex": 4, "type": "retrieval_grounding", "assertion": "行政部门应自收到投诉之日起七个工作日内处理并告知", "mustContain": ["七个工作日", "7个工作日"]}
+      ]
+    },
+    {
+      "caseId": "mrd_004",
+      "scenario": "展会购物维权（特殊场景责任+格式条款）",
+      "turns": [
+        "上个月在展销会上买了个按摩椅，一万二",
+        "现在坏了，展会早撤了，卖家电话也打不通",
+        "这找谁去啊？",
+        "买的时候小票上还印着最终解释权归商家，这条款有效吗？",
+        "另外我是农民，之前在展会上还买了批化肥，出问题也受这个法保护吗？"
+      ],
+      "checkpoints": [
+        {"atTurnIndex": 2, "type": "retrieval_grounding", "assertion": "展销会结束后可向展销会举办者要求赔偿", "mustContain": ["举办者"]},
+        {"atTurnIndex": 3, "type": "retrieval_grounding", "assertion": "排除限制消费者权利的格式条款内容无效", "mustContain": ["无效"]},
+        {"atTurnIndex": 4, "type": "retrieval_grounding", "assertion": "农民购买直接用于农业生产的生产资料参照消保法执行", "mustContain": ["参照"]}
+      ]
+    }
+  ]
+}
