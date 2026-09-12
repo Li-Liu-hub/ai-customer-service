@@ -6,12 +6,9 @@
   <parent><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-parent</artifactId><version>0.1.0-SNAPSHOT</version><relativePath>../pom.xml</relativePath></parent>
   <artifactId>knowledge-agent-mcpserver</artifactId>
   <name>knowledge-agent-mcpserver</name>
-  <description>MCP服务层：通过 /mcp 端点向外部 Agent 暴露业务工具。</description>
+  <description>MCP 接入层：作为客户端消费外部 MCP Server 工具（白名单过滤、连接名前缀、故障容错）。</description>
   <dependencies>
-    <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-common</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
-    <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-knowledge</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
-    <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-starter-mcp-server</artifactId></dependency>
-    <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-starter-mcp-server-webmvc</artifactId></dependency>
+    <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-starter-mcp-client</artifactId></dependency>
     <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>${lombok.version}</version><optional>true</optional></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
   </dependencies>

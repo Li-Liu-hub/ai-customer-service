@@ -11,6 +11,9 @@
     <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-knowledge</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
     <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-conversation</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
     <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-mcpserver</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
+    <!-- /mcp 服务端能力：对外暴露本服务的 MCP 工具（与 mcpserver 模块的客户端接入方向并存） -->
+    <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-starter-mcp-server</artifactId></dependency>
+    <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-starter-mcp-server-webmvc</artifactId></dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

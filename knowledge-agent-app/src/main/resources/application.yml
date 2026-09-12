@@ -8,6 +8,12 @@ spring:
   # 本地开发可复制 .env.example 为 .env；同时兼容项目根目录与app模块目录两种启动工作目录
   config.import: "optional:file:.env[.properties],optional:file:../.env[.properties]"
 
+  autoconfigure:
+    exclude:
+      # 外部工具回调改由 MCP 接入层自建（白名单+来源前缀+故障容错），同时避免自动配置的
+      # ToolCallbackProvider 被 /mcp 服务端收集后，把外部工具反向对外暴露
+      - org.springframework.ai.mcp.client.common.autoconfigure.McpToolCallbackAutoConfiguration
+
   datasource:
     # 默认指向docker容器（5433）；宿主5432被本机PostgreSQL 18服务占用，勿改回5432
     url: ${DB_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5433}/${POSTGRES_DB:team_collaboration_agent}}
@@ -38,6 +44,19 @@ spring:
         tool-callback-converter: false
         stateless:
           mcp-endpoint: /mcp
+      client:
+        # 接入层：消费外部 MCP Server 工具（仅智能客服 Agent 挂载，见 app.mcp）
+        enabled: true
+        # 不在启动时连接外部服务：由接入层首次取工具时容错初始化，外部服务故障不拖垮启动
+        initialized: false
+        name: knowledge-agent
+        version: 0.1.0
+        request-timeout: 60s
+        # 接入示例：在 streamable-http.connections 下新增连接（连接名将作为外部工具名的来源前缀）：
+        # streamable-http:
+        #   connections:
+        #     order-service:
+        #       url: http://localhost:18090
 
     model:
       chat: openai
@@ -72,6 +91,14 @@ app:
     compact-trigger-ratio: 0.9
     # 压缩后「新摘要+剩余活跃」的目标占比（活跃侧预留一半，其余留给摘要，实际落点约15%-25%）
     compact-target-ratio: 0.2
+
+  mcp:
+    # 外部工具白名单（原始工具名，非加前缀后的名字）；为空时不限制
+    tool-whitelist: []
+    # 按连接附加的 HTTP 鉴权头，例如：connection-headers.order-service.Authorization=Bearer xxx
+    connection-headers: {}
+    # 外部服务不可用后的重试冷却时长
+    retry-cooldown: 30s
 
   conversation:
     title-max-length: 10

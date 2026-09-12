@@ -8,6 +8,7 @@ import com.knowledgeagent.common.exception.error.ConversationError;
 import com.knowledgeagent.conversation.pojo.entity.Conversation;
 import com.knowledgeagent.conversation.pojo.entity.Message;
 import com.knowledgeagent.conversation.service.ConversationService;
+import com.knowledgeagent.mcp.support.ExternalToolProvider;
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
@@ -50,6 +51,9 @@ public class ConversationChatServiceImpl implements ConversationChatService {
   /** 上下文预算配置。 */
   private final ContextProperties contextProperties;
 
+  /** 外部 MCP 工具提供者（仅智能客服 Agent 挂载，basicChatAgent 与 summaryChatClient 不挂）。 */
+  private final ExternalToolProvider externalToolProvider;
+
   @Override
   public ConversationChatResponse chat(ConversationChatRequest request) {
     Conversation conversation =
@@ -64,7 +68,13 @@ public class ConversationChatServiceImpl implements ConversationChatService {
 
     List<org.springframework.ai.chat.messages.Message> modelMessages =
         buildModelMessages(conversation, remaining);
-    String answer = agentChatClient.prompt().messages(modelMessages).call().content();
+    String answer =
+        agentChatClient
+            .prompt()
+            .messages(modelMessages)
+            .tools((Object[]) externalToolProvider.toolCallbacks())
+            .call()
+            .content();
     if (answer == null || answer.isBlank()) {
       throw ConversationError.AI_RESPONSE_EMPTY.exception();
     }
