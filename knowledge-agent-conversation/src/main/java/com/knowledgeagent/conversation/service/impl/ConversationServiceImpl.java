@@ -2,6 +2,7 @@ package com.knowledgeagent.conversation.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.knowledgeagent.common.exception.error.ConversationError;
+import com.knowledgeagent.conversation.config.ConversationProperties;
 import com.knowledgeagent.conversation.mapper.ConversationMapper;
 import com.knowledgeagent.conversation.mapper.MessageMapper;
 import com.knowledgeagent.conversation.pojo.entity.Conversation;
@@ -22,6 +23,9 @@ public class ConversationServiceImpl implements ConversationService {
 
   /** 消息表数据访问。 */
   private final MessageMapper messageMapper;
+
+  /** 会话配置（标题长度、处理锁僵尸超时）。 */
+  private final ConversationProperties conversationProperties;
 
   @Override
   public Conversation createConversation() {
@@ -59,12 +63,31 @@ public class ConversationServiceImpl implements ConversationService {
   }
 
   @Override
-  public List<Message> getMessagesAfter(Long conversationId, OffsetDateTime afterTime) {
-    return messageMapper.selectAfterTime(conversationId, afterTime);
+  public List<Message> getMessagesAfter(Long conversationId, Long afterId) {
+    return messageMapper.selectAfterId(conversationId, afterId);
   }
 
   @Override
-  public void applySummary(Long conversationId, String summary, OffsetDateTime boundaryTime) {
-    conversationMapper.updateSummary(conversationId, summary, boundaryTime);
+  public void applySummary(
+      Long conversationId, String summary, Long summarizedUntilId, int summaryTokens) {
+    conversationMapper.updateSummaryAndWatermark(
+        conversationId, summary, summarizedUntilId, summaryTokens);
+  }
+
+  @Override
+  public void updateTitle(Long conversationId, String title) {
+    conversationMapper.updateTitle(conversationId, title);
+  }
+
+  @Override
+  public boolean tryAcquireProcessing(Long conversationId) {
+    OffsetDateTime now = OffsetDateTime.now();
+    OffsetDateTime staleBefore = now.minus(conversationProperties.processingStaleTimeout());
+    return conversationMapper.tryAcquireProcessing(conversationId, now, staleBefore) == 1;
+  }
+
+  @Override
+  public void completeProcessing(Long conversationId) {
+    conversationMapper.completeProcessing(conversationId, OffsetDateTime.now());
   }
 }

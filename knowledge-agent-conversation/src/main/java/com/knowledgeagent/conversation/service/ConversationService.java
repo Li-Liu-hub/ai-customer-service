@@ -2,7 +2,6 @@ package com.knowledgeagent.conversation.service;
 
 import com.knowledgeagent.conversation.pojo.entity.Conversation;
 import com.knowledgeagent.conversation.pojo.entity.Message;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -44,20 +43,45 @@ public interface ConversationService {
   Conversation getConversation(Long conversationId);
 
   /**
-   * 查询会话中创建时间晚于指定分界时间的全部消息，按创建时间正序返回。
+   * 查询会话中消息ID大于摘要水位线后的全部消息，按ID正序返回。
    *
    * @param conversationId 会话ID
-   * @param afterTime 历史分界时间；null表示从最早开始
+   * @param afterId 摘要水位线；null表示从最早开始
    * @return 活跃消息列表
    */
-  List<Message> getMessagesAfter(Long conversationId, OffsetDateTime afterTime);
+  List<Message> getMessagesAfter(Long conversationId, Long afterId);
 
   /**
-   * 写入新的会话摘要，并把会话更新时间更新为新的历史分界时间。
+   * 写入新的会话摘要与摘要水位线（水位线只进不退）。
    *
    * @param conversationId 会话ID
    * @param summary 新的会话摘要
-   * @param boundaryTime 新的历史分界时间
+   * @param summarizedUntilId 摘要水位线：ID不超过该值的消息已折叠进摘要
+   * @param summaryTokens 摘要的Token数量
    */
-  void applySummary(Long conversationId, String summary, OffsetDateTime boundaryTime);
+  void applySummary(
+      Long conversationId, String summary, Long summarizedUntilId, int summaryTokens);
+
+  /**
+   * 更新会话标题。
+   *
+   * @param conversationId 会话ID
+   * @param title 会话标题
+   */
+  void updateTitle(Long conversationId, String title);
+
+  /**
+   * 尝试为会话抢占一轮处理权（同一会话并发保护）。
+   *
+   * @param conversationId 会话ID
+   * @return 抢占成功返回true；已有进行中的轮次时返回false
+   */
+  boolean tryAcquireProcessing(Long conversationId);
+
+  /**
+   * 释放会话处理权，标记本轮处理已完成（成功或失败均需调用）。
+   *
+   * @param conversationId 会话ID
+   */
+  void completeProcessing(Long conversationId);
 }

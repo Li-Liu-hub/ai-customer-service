@@ -11,14 +11,46 @@ import org.apache.ibatis.annotations.Param;
 public interface ConversationMapper extends BaseMapper<Conversation> {
 
   /**
-   * 写入新的会话摘要，并把更新时间更新为新的历史分界时间点。
+   * 写入新的会话摘要与摘要水位线（水位线只进不退）。
    *
    * @param id 会话ID
    * @param summary 新的会话摘要
-   * @param boundaryTime 新的历史分界时间，活跃历史取create_time晚于该时间的消息
+   * @param summarizedUntilId 摘要水位线：ID不超过该值的消息已折叠进摘要
+   * @param summaryTokens 摘要的Token数量
    */
-  void updateSummary(
+  void updateSummaryAndWatermark(
       @Param("id") Long id,
       @Param("summary") String summary,
-      @Param("boundaryTime") OffsetDateTime boundaryTime);
+      @Param("summarizedUntilId") Long summarizedUntilId,
+      @Param("summaryTokens") Integer summaryTokens);
+
+  /**
+   * 更新会话标题。
+   *
+   * @param id 会话ID
+   * @param title 会话标题
+   */
+  void updateTitle(@Param("id") Long id, @Param("title") String title);
+
+  /**
+   * 尝试为会话抢占一轮处理权（同一会话并发保护）：仅当当前无进行中的轮次、
+   * 或上一轮为超时僵尸锁（发起时间早于staleBefore且未完成）时才能抢占成功。
+   *
+   * @param id 会话ID
+   * @param now 当前时间，作为本轮的发起时间
+   * @param staleBefore 僵尸锁判定边界：发起时间早于该值且未完成的轮次视为失效
+   * @return 更新行数，1表示抢占成功，0表示已有进行中的轮次
+   */
+  int tryAcquireProcessing(
+      @Param("id") Long id,
+      @Param("now") OffsetDateTime now,
+      @Param("staleBefore") OffsetDateTime staleBefore);
+
+  /**
+   * 标记会话本轮处理已完成（成功或失败均调用，释放处理权）。
+   *
+   * @param id 会话ID
+   * @param now 完成时间
+   */
+  void completeProcessing(@Param("id") Long id, @Param("now") OffsetDateTime now);
 }

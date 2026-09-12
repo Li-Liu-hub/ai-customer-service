@@ -1,5 +1,6 @@
 package com.knowledgeagent.knowledge.config;
 
+import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -14,6 +15,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param rerankCandidates 送入重排的候选数量
  * @param rerankBaseUrl 重排服务地址（OpenAI兼容 /v1/rerank 接口）
  * @param rerankModelName 重排模型名称
+ * @param rerankTimeout 重排服务读取超时（连接超时固定5秒）
  */
 @ConfigurationProperties("app.rag")
 public record RagProperties(
@@ -25,4 +27,11 @@ public record RagProperties(
     boolean rerankEnabled,
     int rerankCandidates,
     String rerankBaseUrl,
-    String rerankModelName) {}
+    String rerankModelName,
+    Duration rerankTimeout) {
+
+  /** 归一化配置：重排超时缺省时使用30秒。 */
+  public RagProperties {
+    rerankTimeout = rerankTimeout == null ? Duration.ofSeconds(30) : rerankTimeout;
+  }
+}

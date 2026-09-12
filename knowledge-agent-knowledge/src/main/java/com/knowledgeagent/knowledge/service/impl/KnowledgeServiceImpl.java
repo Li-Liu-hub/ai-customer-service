@@ -25,6 +25,7 @@ import com.knowledgeagent.knowledge.pojo.vo.KnowledgeFileVO;
 import com.knowledgeagent.knowledge.service.KnowledgeService;
 import com.knowledgeagent.knowledge.util.TextChunkUtil;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -35,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
@@ -378,6 +380,18 @@ public class KnowledgeServiceImpl implements KnowledgeService {
   }
 
   /**
+   * 构建重排服务HTTP请求工厂：带连接与读取超时，避免重排服务异常时拖垮检索链路。
+   *
+   * @return 带超时配置的请求工厂
+   */
+  private SimpleClientHttpRequestFactory rerankRequestFactory() {
+    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+    factory.setConnectTimeout(Duration.ofSeconds(5));
+    factory.setReadTimeout(ragProperties.rerankTimeout());
+    return factory;
+  }
+
+  /**
    * 调用专用重排服务（bge-reranker，OpenAI兼容 /v1/rerank）对候选分块
    * 按查询相关性重排，失败时降级保持原序。
    *
@@ -393,7 +407,9 @@ public class KnowledgeServiceImpl implements KnowledgeService {
       request.put("documents", candidates.stream().map(KnowledgeChunkVO::content).toList());
       request.put("top_n", candidates.size());
       String raw =
-          RestClient.create()
+          RestClient.builder()
+              .requestFactory(rerankRequestFactory())
+              .build()
               .post()
               .uri(ragProperties.rerankBaseUrl() + "/v1/rerank")
               .contentType(MediaType.APPLICATION_JSON)

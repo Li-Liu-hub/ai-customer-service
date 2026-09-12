@@ -4,11 +4,16 @@ import com.knowledgeagent.ai.config.ContextProperties;
 import com.knowledgeagent.ai.pojo.dto.ConversationChatRequest;
 import com.knowledgeagent.ai.pojo.dto.ConversationChatResponse;
 import com.knowledgeagent.ai.service.ConversationChatService;
+import com.knowledgeagent.common.aop.OperationLog;
+import com.knowledgeagent.common.aop.OperationLogContext;
 import com.knowledgeagent.common.exception.error.ConversationError;
+import com.knowledgeagent.common.util.FormatUtil;
+import com.knowledgeagent.conversation.config.ConversationProperties;
 import com.knowledgeagent.conversation.pojo.entity.Conversation;
 import com.knowledgeagent.conversation.pojo.entity.Message;
 import com.knowledgeagent.conversation.service.ConversationService;
 import com.knowledgeagent.mcp.support.ExternalToolProvider;
+import com.knowledgeagent.systemlog.pojo.OperationType;
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
@@ -21,11 +26,13 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Service;
 
 /**
- * 多轮对话编排：无会话则创建、持久化消息、按时间戳边界回放历史；
- * token预算占模型窗口达到压缩触发比例（如90%）时折叠旧消息进摘要，压后回落到窗口的15%-25%。
+ * 多轮对话编排：无会话则创建、持久化消息、按摘要水位线回放历史；
+ * token预算占模型窗口达到压缩触发比例（如90%）时折叠旧消息进摘要（水位线只进不退），
+ * 压后回落到窗口的15%-25%；同一会话同时只允许一轮对话在途，首轮完成后生成会话标题。
  */
 @Slf4j
 @Service
@@ -45,41 +52,63 @@ public class ConversationChatServiceImpl implements ConversationChatService {
   /** 会话摘要压缩Agent。 */
   private final ChatClient summaryChatClient;
 
+  /** 会话标题生成Agent（根据首轮用户消息生成会话标题）。 */
+  private final ChatClient titleChatClient;
+
   /** 会话存储能力。 */
   private final ConversationService conversationService;
 
   /** 上下文预算配置。 */
   private final ContextProperties contextProperties;
 
+  /** 会话配置（标题长度上限）。 */
+  private final ConversationProperties conversationProperties;
+
   /** 外部 MCP 工具提供者（仅智能客服 Agent 挂载，basicChatAgent 与 summaryChatClient 不挂）。 */
   private final ExternalToolProvider externalToolProvider;
 
   @Override
+  @OperationLog(
+      type = OperationType.AGENT_CHAT,
+      detail = "{'conversationId': #result.conversationId()}")
   public ConversationChatResponse chat(ConversationChatRequest request) {
     Conversation conversation =
         request.getConversationId() == null
             ? conversationService.createConversation()
             : conversationService.getConversation(request.getConversationId());
-
-    // 先落库本次用户消息，再以其create_time晚于update_time的活跃消息构建历史
-    Message currentUser = conversationService.saveUserMessage(conversation.getId(), request.getMessage());
-    List<Message> active = conversationService.getMessagesAfter(conversation.getId(), conversation.getUpdateTime());
-    List<Message> remaining = maybeCompress(conversation, active);
-
-    List<org.springframework.ai.chat.messages.Message> modelMessages =
-        buildModelMessages(conversation, remaining);
-    String answer =
-        agentChatClient
-            .prompt()
-            .messages(modelMessages)
-            .tools((Object[]) externalToolProvider.toolCallbacks())
-            .call()
-            .content();
-    if (answer == null || answer.isBlank()) {
-      throw ConversationError.AI_RESPONSE_EMPTY.exception();
+    // 并发保护：同一会话同时只允许一轮对话在途，完成后（含失败）释放处理权
+    if (!conversationService.tryAcquireProcessing(conversation.getId())) {
+      throw ConversationError.CONVERSATION_BUSY.exception();
     }
-    conversationService.completeAssistantMessage(currentUser.getId(), answer);
-    return new ConversationChatResponse(conversation.getId(), answer);
+    try {
+      // 先落库本次用户消息，再以其晚于摘要水位线的活跃消息构建历史
+      Message currentUser =
+          conversationService.saveUserMessage(conversation.getId(), request.getMessage());
+      List<Message> active =
+          conversationService.getMessagesAfter(
+              conversation.getId(), conversation.getSummarizedUntilId());
+      List<Message> remaining = maybeCompress(conversation, active);
+
+      List<org.springframework.ai.chat.messages.Message> modelMessages =
+          buildModelMessages(conversation, remaining);
+      ChatResponse response =
+          agentChatClient
+              .prompt()
+              .messages(modelMessages)
+              .tools((Object[]) externalToolProvider.toolCallbacks())
+              .call()
+              .chatResponse();
+      OperationLogContext.add(response);
+      String answer = responseText(response);
+      if (answer == null || answer.isBlank()) {
+        throw ConversationError.AI_RESPONSE_EMPTY.exception();
+      }
+      conversationService.completeAssistantMessage(currentUser.getId(), answer);
+      maybeGenerateTitle(conversation, request.getMessage());
+      return new ConversationChatResponse(conversation.getId(), answer);
+    } finally {
+      conversationService.completeProcessing(conversation.getId());
+    }
   }
 
   /**
@@ -148,8 +177,10 @@ public class ConversationChatServiceImpl implements ConversationChatService {
     List<Message> toFold = new ArrayList<>(active.subList(0, foldCount));
     String newSummary = compress(conversation, toFold);
     conversation.setSummary(newSummary);
+    Long summarizedUntilId = toFold.get(toFold.size() - 1).getId();
+    conversation.setSummarizedUntilId(summarizedUntilId);
     conversationService.applySummary(
-        conversation.getId(), newSummary, toFold.get(toFold.size() - 1).getCreateTime());
+        conversation.getId(), newSummary, summarizedUntilId, countTokens(newSummary));
 
     List<Message> remaining = active.subList(foldCount, active.size());
     int afterTokens = countTokens(newSummary) + activeTokens(remaining);
@@ -182,11 +213,60 @@ public class ConversationChatServiceImpl implements ConversationChatService {
         content.append("助手：").append(m.getAiMessage()).append("\n");
       }
     }
-    String summary = summaryChatClient.prompt().user(content.toString()).call().content();
+    ChatResponse response =
+        summaryChatClient.prompt().user(content.toString()).call().chatResponse();
+    OperationLogContext.add(response);
+    String summary = responseText(response);
     if (summary == null || summary.isBlank()) {
       throw ConversationError.SUMMARY_GENERATION_EMPTY.exception();
     }
     return summary;
+  }
+
+  /**
+   * 首轮对话（会话尚无标题）后，根据用户第一段消息生成会话标题；
+   * 模型不可用时降级为消息截断，保证标题总有值。
+   *
+   * @param conversation 当前会话
+   * @param firstUserMessage 首轮用户消息
+   */
+  private void maybeGenerateTitle(Conversation conversation, String firstUserMessage) {
+    if (conversation.getTitle() != null && !conversation.getTitle().isBlank()) {
+      return;
+    }
+    int maxLength = conversationProperties.titleMaxLength();
+    String title = null;
+    try {
+      ChatResponse response =
+          titleChatClient.prompt().user(firstUserMessage).call().chatResponse();
+      OperationLogContext.add(response);
+      title = FormatUtil.normalizeConversationTitle(responseText(response), maxLength);
+    } catch (Exception e) {
+      log.warn("会话标题生成失败，降级使用消息截断：{}", e.getMessage());
+    }
+    if (title == null || title.isBlank()) {
+      title = FormatUtil.normalizeConversationTitle(firstUserMessage, maxLength);
+    }
+    if (title != null && !title.isBlank()) {
+      try {
+        conversationService.updateTitle(conversation.getId(), title);
+        conversation.setTitle(title);
+      } catch (RuntimeException e) {
+        log.warn("保存会话标题失败：{}", e.getMessage());
+      }
+    }
+  }
+
+  /**
+   * 提取聊天响应中的文本内容。
+   *
+   * @param response 聊天响应，可能为null
+   * @return 响应文本；响应结构不完整时返回null
+   */
+  private static String responseText(ChatResponse response) {
+    return response == null || response.getResult() == null
+        ? null
+        : response.getResult().getOutput().getText();
   }
 
   /**

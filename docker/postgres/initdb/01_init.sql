@@ -12,15 +12,19 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- 水位线 = summarized_until_id：id <= 该值的消息已压缩进 summary，不再进入上下文原文；
 -- id > 该值的消息原文保留。水位线只进不退，消息永不删除。
 -- update_time 仅负责会话列表排序与活跃刷新，禁止充当水位线。
+-- processing_started_at / processing_completed_at 为同一会话并发保护：
+-- started > completed 表示有一轮对话在途；发起超过僵尸超时仍未完成视为失效锁，可被下一轮接管。
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS conversation (
-  id                  BIGINT       PRIMARY KEY,
-  title               VARCHAR(255),
-  create_time         TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  update_time         TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  summary             TEXT,
-  summarized_until_id BIGINT,
-  summary_tokens      INTEGER
+  id                     BIGINT       PRIMARY KEY,
+  title                  VARCHAR(255),
+  create_time            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  update_time            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  summary                TEXT,
+  summarized_until_id    BIGINT,
+  summary_tokens         INTEGER,
+  processing_started_at  TIMESTAMPTZ,
+  processing_completed_at TIMESTAMPTZ
 );
 
 CREATE INDEX IF NOT EXISTS idx_conversation_update

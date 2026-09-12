@@ -16,7 +16,8 @@ public enum ConversationError {
   CONVERSATION_NOT_FOUND(3010, "会话不存在", 404),
   SUMMARY_GENERATION_FAILED(3011, "压缩会话历史失败", 502),
   SUMMARY_GENERATION_EMPTY(3012, "大模型没有返回有效摘要", 502),
-  SUMMARY_UPDATE_FAILED(3013, "保存会话摘要失败", 500);
+  SUMMARY_UPDATE_FAILED(3013, "保存会话摘要失败", 500),
+  CONVERSATION_BUSY(3014, "该会话有一轮对话正在处理中，请稍后再试", 409);
 
   /** 业务错误码。 */
   private final int code;

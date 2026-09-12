@@ -8,7 +8,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** 组装对话Agent：基础问答、带知识检索工具的智能客服Agent与会话摘要压缩。 */
+/** 组装对话Agent：基础问答、带知识检索工具的智能客服Agent、会话摘要压缩与会话标题生成。 */
 @Configuration
 public class AgentChatClientConfiguration {
 
@@ -51,6 +51,19 @@ public class AgentChatClientConfiguration {
   public ChatClient summaryChatClient(ChatModel chatModel) {
     return ChatClient.builder(chatModel)
         .defaultSystem(AgentPrompts.SUMMARY_SYSTEM.getText())
+        .build();
+  }
+
+  /**
+   * 创建负责根据用户首轮消息生成会话标题的ChatClient。
+   *
+   * @param chatModel 配置文件启用的聊天模型
+   * @return 会话标题生成使用的ChatClient
+   */
+  @Bean
+  public ChatClient titleChatClient(ChatModel chatModel) {
+    return ChatClient.builder(chatModel)
+        .defaultSystem(AgentPrompts.TITLE_SYSTEM.getText())
         .build();
   }
 }

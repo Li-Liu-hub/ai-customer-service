@@ -59,28 +59,15 @@ spring:
         #       url: http://localhost:18090
 
     model:
-      chat: openai
-      embedding: openai
+      # 聊天/向量模型均改为应用自建的多级降级链（见 app.ai.chat.levels / app.ai.embedding.levels），关闭自动配置
+      chat: none
+      embedding: none
       audio.speech: none
       audio.transcription: none
       image: none
       moderation: none
 
-    openai:
-      chat:
-        # 本地 OpenAI 兼容模型服务，运行在 8080 端口；本地服务不校验key，用占位local
-        base-url: ${CHAT_MODEL_BASE_URL:http://localhost:8080}
-        completions-path: /v1/chat/completions
-        api-key: ${CHAT_MODEL_API_KEY:local}
-        options:
-          model: ${CHAT_MODEL_NAME:spark2.5}
-
-      embedding:
-        # 占位key仅为保证启动；做RAG入库前需替换为真实的 SiliconFlow key
-        base-url: ${EMBEDDING_MODEL_BASE_URL:https://api.siliconflow.cn}
-        api-key: ${EMBEDDING_MODEL_API_KEY:local}
-        options:
-          model: ${EMBEDDING_MODEL_NAME:BAAI/bge-m3}
+    # 聊天与向量模型均已迁移到 app.ai.chat.levels / app.ai.embedding.levels（多级降级+超时）
 
 
 app:
@@ -91,6 +78,46 @@ app:
     compact-trigger-ratio: 0.9
     # 压缩后「新摘要+剩余活跃」的目标占比（活跃侧预留一半，其余留给摘要，实际落点约15%-25%）
     compact-target-ratio: 0.2
+    chat:
+      # 聊天模型降级链：按顺序尝试，前一级失败（超时/连接失败/空响应）自动降级下一级；
+      # 所有对话、摘要与标题生成共用此链，每级带独立超时，不会无限阻塞。
+      levels:
+        - name: primary
+          base-url: ${CHAT_MODEL_BASE_URL:http://localhost:8080}
+          api-key: ${CHAT_MODEL_API_KEY:local}
+          model: ${CHAT_MODEL_NAME:spark2.5}
+          connect-timeout: 10s
+          read-timeout: 120s
+        # 第二级（示例：主模型不可用时启用，取消注释并填写）：
+        # - name: secondary
+        #   base-url: ${CHAT_FALLBACK_SECONDARY_BASE_URL:}
+        #   api-key: ${CHAT_FALLBACK_SECONDARY_API_KEY:}
+        #   model: ${CHAT_FALLBACK_SECONDARY_MODEL:}
+        #   connect-timeout: 10s
+        #   read-timeout: 60s
+        # 第三级（示例）：
+        # - name: tertiary
+        #   base-url: ${CHAT_FALLBACK_TERTIARY_BASE_URL:}
+        #   api-key: ${CHAT_FALLBACK_TERTIARY_API_KEY:}
+        #   model: ${CHAT_FALLBACK_TERTIARY_MODEL:}
+        #   connect-timeout: 10s
+        #   read-timeout: 60s
+    embedding:
+      # 向量模型降级链：各级必须指向维度一致、向量空间一致的模型（bge-m3 族），否则向量不可比。
+      levels:
+        - name: primary
+          base-url: ${EMBEDDING_MODEL_BASE_URL:https://api.siliconflow.cn}
+          api-key: ${EMBEDDING_MODEL_API_KEY:local}
+          model: ${EMBEDDING_MODEL_NAME:BAAI/bge-m3}
+          connect-timeout: 5s
+          read-timeout: 60s
+        # 第二级（示例：主向量服务不可用时启用同维度模型服务）：
+        # - name: secondary
+        #   base-url: ${EMBEDDING_FALLBACK_SECONDARY_BASE_URL:}
+        #   api-key: ${EMBEDDING_FALLBACK_SECONDARY_API_KEY:}
+        #   model: ${EMBEDDING_FALLBACK_SECONDARY_MODEL:}
+        #   connect-timeout: 5s
+        #   read-timeout: 60s
 
   mcp:
     # 外部工具白名单（原始工具名，非加前缀后的名字）；为空时不限制
@@ -101,7 +128,10 @@ app:
     retry-cooldown: 30s
 
   conversation:
+    # 首轮会话标题的最大字符数
     title-max-length: 10
+    # 处理锁僵尸超时：一轮对话发起后超过该时长仍未完成，视为失效锁可被下一轮接管
+    processing-stale-timeout: 10m
 
   embedding:
     model-name: BAAI/bge-m3
@@ -127,6 +157,8 @@ app:
     rerank-base-url: ${RERANK_MODEL_BASE_URL:http://localhost:8083}
     # 重排模型名称
     rerank-model-name: ${RERANK_MODEL_NAME:bge-reranker-v2-m3}
+    # 重排服务读取超时（连接超时固定5秒）
+    rerank-timeout: 30s
 
   text-chunk:
     target-length: 1000

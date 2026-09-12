@@ -13,10 +13,37 @@
     <result property="summaryTokens" column="summary_tokens"/>
   </resultMap>
 
-  <update id="updateSummary">
+  <!-- 写入摘要与水位线：水位线只进不退；update_time 仅用于会话列表排序与活跃刷新。 -->
+  <update id="updateSummaryAndWatermark">
     UPDATE conversation
-    SET summary     = #{summary},
-        update_time = #{boundaryTime}
+    SET summary             = #{summary},
+        summarized_until_id = GREATEST(COALESCE(summarized_until_id, 0), #{summarizedUntilId}),
+        summary_tokens      = #{summaryTokens},
+        update_time         = NOW()
+    WHERE id = #{id}
+  </update>
+
+  <update id="updateTitle">
+    UPDATE conversation
+    SET title = #{title}
+    WHERE id = #{id}
+  </update>
+
+  <!-- 原子抢占处理权：无进行中轮次（无发起或已完成）或上一轮为超时僵尸锁时成功，返回1。 -->
+  <update id="tryAcquireProcessing">
+    UPDATE conversation
+    SET processing_started_at = #{now}
+    WHERE id = #{id}
+      AND (
+        processing_started_at IS NULL
+        OR processing_completed_at &gt;= processing_started_at
+        OR processing_started_at &lt; #{staleBefore}
+      )
+  </update>
+
+  <update id="completeProcessing">
+    UPDATE conversation
+    SET processing_completed_at = #{now}
     WHERE id = #{id}
   </update>
 

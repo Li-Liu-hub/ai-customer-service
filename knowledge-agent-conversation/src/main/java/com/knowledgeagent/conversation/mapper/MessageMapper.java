@@ -2,7 +2,6 @@ package com.knowledgeagent.conversation.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.knowledgeagent.conversation.pojo.entity.Message;
-import java.time.OffsetDateTime;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -12,14 +11,14 @@ import org.apache.ibatis.annotations.Param;
 public interface MessageMapper extends BaseMapper<Message> {
 
   /**
-   * 查询某会话中创建时间晚于指定时间点后的消息，按创建时间正序返回。
+   * 查询某会话中消息ID大于摘要水位线后的消息，按ID正序返回。
    *
    * @param conversationId 会话ID
-   * @param afterTime 历史分界时间，仅返回create_time晚于该时间的消息
-   * @return 按创建时间正序排列的活跃消息列表
+   * @param afterId 摘要水位线；null表示从最早开始
+   * @return 按ID正序排列的活跃消息列表
    */
-  List<Message> selectAfterTime(
-      @Param("conversationId") Long conversationId, @Param("afterTime") OffsetDateTime afterTime);
+  List<Message> selectAfterId(
+      @Param("conversationId") Long conversationId, @Param("afterId") Long afterId);
 
   /**
    * 回填某条消息的AI回复。

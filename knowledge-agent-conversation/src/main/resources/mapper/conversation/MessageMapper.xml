@@ -13,12 +13,12 @@
     <result property="aiTokens" column="ai_tokens"/>
   </resultMap>
 
-  <select id="selectAfterTime" resultMap="MessageResultMap">
+  <select id="selectAfterId" resultMap="MessageResultMap">
     SELECT id, conversation_id, user_message, ai_message, create_time, user_tokens, ai_tokens
     FROM message
     WHERE conversation_id = #{conversationId}
-      AND create_time &gt; #{afterTime}
-    ORDER BY create_time ASC
+      AND (#{afterId,jdbcType=BIGINT} IS NULL OR id &gt; #{afterId,jdbcType=BIGINT})
+    ORDER BY id ASC
   </select>
 
   <update id="updateAssistantMessage">
