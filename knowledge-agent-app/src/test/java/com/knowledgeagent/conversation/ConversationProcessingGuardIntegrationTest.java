@@ -94,4 +94,38 @@ class ConversationProcessingGuardIntegrationTest {
             conversation.getId(), again.getSummarizedUntilId());
     assertTrue(none.isEmpty());
   }
+
+  /** 上下文预算判断与压缩范围选择由会话模块提供：按落库Token统计，未达阈值不折叠，仅剩当前轮时压无可压。 */
+  @Test
+  void contextBudgetCheckAndCompressionSelectionAreProvidedByConversationModule() {
+    Conversation conversation = conversationService.createConversation();
+    Message first = conversationService.saveUserMessage(conversation.getId(), "第一条消息", 100);
+    conversationService.completeAssistantMessage(first.getId(), "第一条回复", 100);
+    Message second = conversationService.saveUserMessage(conversation.getId(), "第二条消息", 100);
+    conversationService.completeAssistantMessage(second.getId(), "第二条回复", 100);
+
+    // 水位线为空：两条消息都是活跃消息
+    List<Message> active = conversationService.getActiveMessages(conversation.getId());
+    assertEquals(2, active.size(), "水位线为空时应返回全部消息");
+
+    // 预算判断：窗口1000×0.9=900 > 活跃400 → 未达阈值；窗口400×0.9=360 < 400 → 达到
+    assertFalse(conversationService.isContextBudgetReached(conversation.getId(), 1000, 0.9));
+    assertTrue(conversationService.isContextBudgetReached(conversation.getId(), 400, 0.9));
+
+    // 折叠选择：配额=窗口400×0.2/2=40；从最旧折叠且当前轮除外 → 只折叠第一条
+    List<Message> toFold =
+        conversationService.selectMessagesForCompression(conversation.getId(), 400, 0.2);
+    assertEquals(1, toFold.size());
+    assertEquals(first.getId(), toFold.get(0).getId());
+
+    // 水位线推进后仅剩当前轮：压无可压
+    conversationService.applySummary(conversation.getId(), "摘要", first.getId(), 10);
+    List<Message> activeAfter = conversationService.getActiveMessages(conversation.getId());
+    assertEquals(1, activeAfter.size());
+    assertEquals(second.getId(), activeAfter.get(0).getId());
+    assertTrue(
+        conversationService
+            .selectMessagesForCompression(conversation.getId(), 400, 0.2)
+            .isEmpty());
+  }
 }

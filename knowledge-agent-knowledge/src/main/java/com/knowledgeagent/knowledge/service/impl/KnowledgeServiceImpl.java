@@ -12,6 +12,7 @@ import com.knowledgeagent.common.util.FileStorageUtil;
 import com.knowledgeagent.common.util.FileValidationUtil;
 import com.knowledgeagent.common.util.FormatUtil;
 import com.knowledgeagent.common.util.TextCleaningUtil;
+import com.knowledgeagent.common.util.TokenEstimateUtil;
 import com.knowledgeagent.knowledge.config.RagProperties;
 import com.knowledgeagent.knowledge.mapper.KnowledgeChunkMapper;
 import com.knowledgeagent.knowledge.mapper.KnowledgeFileMapper;
@@ -81,7 +82,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
   /** RAG检索配置（各调优开关）。 */
   private final RagProperties ragProperties;
 
-  /** JSON序列化，构建切片metadata。 */
+  /** JSON序列化（重排服务请求构建与响应解析）。 */
   private final ObjectMapper objectMapper;
 
   @Override
@@ -102,7 +103,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
       String cleanText = TextCleaningUtil.clean(rawText);
       List<String> chunkTexts = TextChunkUtil.chunk(cleanText, textChunkProperties, type);
       List<float[]> vectors = embedAll(chunkTexts);
-      List<KnowledgeChunk> chunks = buildChunks(fileId, chunkTexts, vectors, kbName, type, source);
+      List<KnowledgeChunk> chunks = buildChunks(fileId, chunkTexts, vectors);
 
       KnowledgeFile entity = new KnowledgeFile();
       entity.setId(fileId);
@@ -223,23 +224,15 @@ public class KnowledgeServiceImpl implements KnowledgeService {
   }
 
   /**
-   * 组装切片实体列表：ID、序号、Token数与metadata标签。
+   * 组装切片实体列表：ID、序号与Token数。
    *
    * @param fileId 所属文件ID
    * @param texts 分块文本
    * @param vectors 分块向量
-   * @param kbName 知识库名称
-   * @param type 文档业务类型
-   * @param source 素材来源
    * @return 切片实体列表
    */
   private List<KnowledgeChunk> buildChunks(
-      Long fileId,
-      List<String> texts,
-      List<float[]> vectors,
-      String kbName,
-      DocumentType type,
-      String source) {
+      Long fileId, List<String> texts, List<float[]> vectors) {
     List<KnowledgeChunk> chunks = new ArrayList<>(texts.size());
     for (int i = 0; i < texts.size(); i++) {
       KnowledgeChunk chunk = new KnowledgeChunk();
@@ -249,33 +242,10 @@ public class KnowledgeServiceImpl implements KnowledgeService {
       chunk.setContent(texts.get(i));
       chunk.setEmbedding(FormatUtil.toVectorLiteral(vectors.get(i)));
       chunk.setTextLength(texts.get(i).length());
-      chunk.setTokenCount(TextChunkUtil.countTokens(texts.get(i)));
-      chunk.setMetadata(buildMetadata(kbName, type, source));
+      chunk.setTokenCount(TokenEstimateUtil.countTokens(texts.get(i)));
       chunks.add(chunk);
     }
     return chunks;
-  }
-
-  /**
-   * 构建切片标签元数据JSON。
-   *
-   * @param kbName 知识库名称
-   * @param type 文档业务类型
-   * @param source 素材来源
-   * @return metadata JSON字符串
-   */
-  private String buildMetadata(String kbName, DocumentType type, String source) {
-    try {
-      Map<String, Object> meta = new LinkedHashMap<>();
-      meta.put("kbName", kbName);
-      meta.put("docType", type.name());
-      if (source != null && !source.isBlank()) {
-        meta.put("source", source);
-      }
-      return objectMapper.writeValueAsString(meta);
-    } catch (Exception e) {
-      return null;
-    }
   }
 
   /**

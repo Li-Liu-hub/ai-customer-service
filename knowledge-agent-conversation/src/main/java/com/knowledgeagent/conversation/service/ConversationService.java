@@ -6,7 +6,8 @@ import java.util.List;
 
 /**
  * 会话存储能力，供上层ai模块编排多轮对话使用。
- * 本模块不感知大模型，只负责会话与消息的持久化、历史回调与摘要分界时间的存储。
+ * 本模块不感知大模型，只负责会话与消息的持久化、按摘要水位线的历史回放，
+ * 以及上下文预算判断与压缩范围选择。
  */
 public interface ConversationService {
 
@@ -54,6 +55,14 @@ public interface ConversationService {
   List<Message> getMessagesAfter(Long conversationId, Long afterId);
 
   /**
+   * 查询会话水位线之后的活跃消息（尚未压缩进摘要的历史原文，含当前轮，按ID正序返回）。
+   *
+   * @param conversationId 会话ID
+   * @return 水位线后的活跃消息列表
+   */
+  List<Message> getActiveMessages(Long conversationId);
+
+  /**
    * 查询最近更新的会话列表。
    *
    * @param limit 最大返回数量（内部夹紧到1到200）
@@ -71,6 +80,29 @@ public interface ConversationService {
    */
   void applySummary(
       Long conversationId, String summary, Long summarizedUntilId, int summaryTokens);
+
+  /**
+   * 判断会话摘要与活跃消息的Token总量是否达到上下文窗口的压缩触发比例。
+   *
+   * @param conversationId 会话ID
+   * @param windowTokens 上下文窗口Token数（由上层按模型配置传入）
+   * @param triggerRatio 压缩触发比例（如0.9）
+   * @return 达到触发阈值返回true
+   */
+  boolean isContextBudgetReached(Long conversationId, int windowTokens, double triggerRatio);
+
+  /**
+   * 选出需要折叠进摘要的最旧活跃消息：从最旧开始折叠，使剩余活跃消息Token不超过窗口配额
+   * （窗口×压缩目标比例/2）；若活跃侧本就在配额内（摘要自身过大），除当前轮外全部折叠。
+   * 当前轮永不折叠。
+   *
+   * @param conversationId 会话ID
+   * @param windowTokens 上下文窗口Token数（由上层按模型配置传入）
+   * @param targetRatio 压缩后活跃侧目标比例（如0.2）
+   * @return 待折叠消息列表；为空表示无需折叠或压无可压
+   */
+  List<Message> selectMessagesForCompression(
+      Long conversationId, int windowTokens, double targetRatio);
 
   /**
    * 更新会话标题。

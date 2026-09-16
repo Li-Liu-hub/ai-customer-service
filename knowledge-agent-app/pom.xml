@@ -14,6 +14,12 @@
     <!-- /mcp 服务端能力：对外暴露本服务的 MCP 工具（与 mcpserver 模块的客户端接入方向并存） -->
     <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-starter-mcp-server</artifactId></dependency>
     <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-starter-mcp-server-webmvc</artifactId></dependency>
+    <!-- 接口文档：运行时生成 OpenAPI 3 规范（/v3/api-docs），供 Apifox/Swagger 一键导入全部 REST 接口 -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.8.17</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

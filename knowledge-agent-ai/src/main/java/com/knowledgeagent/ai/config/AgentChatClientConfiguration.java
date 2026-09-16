@@ -8,22 +8,9 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** 组装对话Agent：基础问答、带知识检索工具的智能客服Agent、会话摘要压缩与会话标题生成。 */
+/** 组装对话Agent：带知识检索工具的智能客服Agent、会话摘要压缩与会话标题生成。 */
 @Configuration
 public class AgentChatClientConfiguration {
-
-  /**
-   * 创建最基本对话Agent对应的ChatClient，系统提示词由框架封装为SystemMessage注入。
-   *
-   * @param chatModel 配置文件启用的聊天模型（本地OpenAI兼容服务）
-   * @return 基本对话使用的ChatClient
-   */
-  @Bean
-  public ChatClient basicChatAgent(ChatModel chatModel) {
-    return ChatClient.builder(chatModel)
-        .defaultSystem(AgentPrompts.BASIC_CHAT_SYSTEM.getText())
-        .build();
-  }
 
   /**
    * 创建智能客服Agent：挂载知识检索工具（枚举知识库+语义检索），
@@ -42,16 +29,18 @@ public class AgentChatClientConfiguration {
   }
 
   /**
-   * 创建负责把旧摘要与待压缩对话轮次压缩为新会话摘要的ChatClient，用于上下文超限时的压缩。
+   * 创建会话摘要Agent：绑定摘要压缩系统提示词，把旧摘要与待压缩轮次合并为新的交接摘要。
    *
    * @param chatModel 配置文件启用的聊天模型
-   * @return 会话摘要压缩使用的ChatClient
+   * @return 会话摘要Agent
    */
   @Bean
-  public ChatClient summaryChatClient(ChatModel chatModel) {
-    return ChatClient.builder(chatModel)
-        .defaultSystem(AgentPrompts.SUMMARY_SYSTEM.getText())
-        .build();
+  public SummaryAgent summaryAgent(ChatModel chatModel) {
+    ChatClient summaryChatClient =
+        ChatClient.builder(chatModel)
+            .defaultSystem(AgentPrompts.SUMMARY_SYSTEM.getText())
+            .build();
+    return new SummaryAgent(summaryChatClient);
   }
 
   /**

@@ -12,4 +12,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties("app.ai")
 public record ContextProperties(
-    int contextWindowTokens, double compactTriggerRatio, double compactTargetRatio) {}
+    int contextWindowTokens,
+    double compactTriggerRatio,
+    double compactTargetRatio) {
+
+}

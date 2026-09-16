@@ -1,4 +1,4 @@
-package com.knowledgeagent.ai.pojo.vo;
+package com.knowledgeagent.conversation.pojo.vo;
 
 import java.time.OffsetDateTime;
 
@@ -11,4 +11,6 @@ import java.time.OffsetDateTime;
  * @param createTime 创建时间
  */
 public record ConversationMessageVO(
-    Long id, String userMessage, String aiMessage, OffsetDateTime createTime) {}
+    Long id, String userMessage, String aiMessage, OffsetDateTime createTime) {
+
+}

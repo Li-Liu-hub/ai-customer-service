@@ -6,14 +6,13 @@
   <parent><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-parent</artifactId><version>0.1.0-SNAPSHOT</version><relativePath>../pom.xml</relativePath></parent>
   <artifactId>knowledge-agent-ai</artifactId>
   <name>knowledge-agent-ai</name>
-  <description>Agent能力层：提示词工程、ChatClient拼装、上下文管理与压缩、Token统计，以及服务Agent的基础工具。</description>
+  <description>Agent能力层：提示词工程、ChatClient拼装、多轮对话与上下文压缩编排，以及智能客服Agent的知识检索工具。</description>
   <dependencies>
     <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-common</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
     <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-mcpserver</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
     <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-conversation</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
     <dependency><groupId>com.knowledgeagent</groupId><artifactId>knowledge-agent-knowledge</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
     <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-starter-model-openai</artifactId></dependency>
-    <dependency><groupId>com.knuddels</groupId><artifactId>jtokkit</artifactId><version>1.1.0</version></dependency>
     <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>${lombok.version}</version><optional>true</optional></dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

@@ -74,10 +74,12 @@ CREATE TABLE IF NOT EXISTS knowledge_file (
 CREATE INDEX IF NOT EXISTS idx_knowledge_file_kb
   ON knowledge_file (kb_name, create_time DESC);
 
+CREATE INDEX IF NOT EXISTS idx_knowledge_file_type
+  ON knowledge_file (document_type, create_time DESC);
+
 -- ------------------------------------------------------------
 -- 知识切片表：切块内容与向量。
 -- embedding 维度 1024 与 BGE-M3 配置一致，更换向量模型需同步修改本列维度并全量重建。
--- metadata 存标签（如 {"docType":"QA_SET","source":"jd"}），JSONB + GIN 支撑按标签过滤。
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS knowledge_chunk (
   id          BIGINT        PRIMARY KEY,
@@ -87,7 +89,6 @@ CREATE TABLE IF NOT EXISTS knowledge_chunk (
   embedding   vector(1024)  NOT NULL,
   text_length INTEGER       NOT NULL,
   token_count INTEGER       NOT NULL,
-  metadata    JSONB,
   create_time TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
   CONSTRAINT uk_knowledge_chunk_file_index UNIQUE (file_id, chunk_index)
 );
@@ -95,10 +96,6 @@ CREATE TABLE IF NOT EXISTS knowledge_chunk (
 -- 余弦距离 HNSW 索引，支撑 <=> 相似度检索。
 CREATE INDEX IF NOT EXISTS idx_knowledge_chunk_embedding
   ON knowledge_chunk USING hnsw (embedding vector_cosine_ops);
-
--- metadata 标签过滤索引，支撑 @> 包含查询。
-CREATE INDEX IF NOT EXISTS idx_knowledge_chunk_metadata
-  ON knowledge_chunk USING gin (metadata jsonb_path_ops);
 
 -- ------------------------------------------------------------
 -- 系统日志表：operation_detail 由 SystemLogAspect 序列化为 JSON 后写入。

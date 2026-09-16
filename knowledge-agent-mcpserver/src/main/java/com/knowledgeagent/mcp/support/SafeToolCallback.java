@@ -48,10 +48,20 @@ public class SafeToolCallback implements ToolCallback {
    * @return 工具正常返回时原样返回；失败时返回失败说明文本
    */
   private String safeCall(Supplier<String> call) {
+    long startMillis = System.currentTimeMillis();
     try {
-      return call.get();
+      String result = call.get();
+      log.info(
+          "外部MCP工具调用完成 tool={} 耗时{}ms",
+          delegate.getToolDefinition().name(),
+          System.currentTimeMillis() - startMillis);
+      return result;
     } catch (Exception e) {
-      log.warn("外部MCP工具调用失败 tool={} reason={}", delegate.getToolDefinition().name(), e.getMessage());
+      log.warn(
+          "外部MCP工具调用失败 tool={} 耗时{}ms reason={}",
+          delegate.getToolDefinition().name(),
+          System.currentTimeMillis() - startMillis,
+          e.getMessage());
       return "外部工具执行失败（外部服务暂时不可用），请如实告知用户稍后重试，不要编造工具执行结果。";
     }
   }

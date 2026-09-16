@@ -2,18 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.knowledgeagent.knowledge.mapper.KnowledgeChunkMapper">
 
-  <!-- 批量写入切片：embedding为向量字面量、metadata为JSON字符串，均在SQL侧CAST。 -->
+  <!-- 批量写入切片：embedding为向量字面量，在SQL侧CAST。 -->
   <insert id="batchInsert">
-    INSERT INTO knowledge_chunk (id, file_id, chunk_index, content, embedding, text_length, token_count, metadata)
+    INSERT INTO knowledge_chunk (id, file_id, chunk_index, content, embedding, text_length, token_count)
     VALUES
     <foreach collection="chunks" item="c" separator=",">
       (#{c.id}, #{c.fileId}, #{c.chunkIndex}, #{c.content},
        CAST(#{c.embedding} AS vector),
-       #{c.textLength}, #{c.tokenCount},
-       <choose>
-         <when test="c.metadata != null">CAST(#{c.metadata} AS jsonb)</when>
-         <otherwise>NULL</otherwise>
-       </choose>)
+       #{c.textLength}, #{c.tokenCount})
     </foreach>
   </insert>
 

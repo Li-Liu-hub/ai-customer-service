@@ -6,6 +6,8 @@ import com.knowledgeagent.knowledge.pojo.vo.KnowledgeBaseVO;
 import com.knowledgeagent.knowledge.pojo.vo.KnowledgeChunkVO;
 import com.knowledgeagent.knowledge.pojo.vo.KnowledgeFileVO;
 import com.knowledgeagent.knowledge.service.KnowledgeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 /** 知识库REST接口：向外部暴露RAG入库与检索能力（Agent工具在ai模块内复用同一Service）。 */
+@Tag(name = "知识库", description = "知识文件入库、检索与管理")
 @RestController
 @RequestMapping("/api/knowledge")
 @RequiredArgsConstructor
@@ -40,6 +43,9 @@ public class KnowledgeController {
    * @param source 素材来源，可选
    * @return 入库结果
    */
+  @Operation(
+      summary = "上传知识文件并入库",
+      description = "支持 pdf/docx/txt/md；切片向量化后写入知识库，可按名称分库")
   @PostMapping(value = "/files", consumes = "multipart/form-data")
   public ApiResponse<KnowledgeFileVO> ingestFile(
       @RequestPart("file") MultipartFile file,
@@ -55,6 +61,7 @@ public class KnowledgeController {
    * @param kbName 知识库名称，可选
    * @return 文件列表
    */
+  @Operation(summary = "查询知识文件列表", description = "可按知识库名称过滤")
   @GetMapping("/files")
   public ApiResponse<List<KnowledgeFileVO>> listFiles(
       @RequestParam(value = "kbName", required = false) String kbName) {
@@ -67,6 +74,7 @@ public class KnowledgeController {
    * @param fileId 文件ID
    * @return 空结果
    */
+  @Operation(summary = "删除知识文件", description = "同时删除该文件的全部向量分块")
   @DeleteMapping("/files/{fileId}")
   public ApiResponse<Void> deleteFile(@PathVariable Long fileId) {
     knowledgeService.deleteFile(fileId);
@@ -78,6 +86,7 @@ public class KnowledgeController {
    *
    * @return 知识库聚合列表
    */
+  @Operation(summary = "查询知识库列表", description = "返回每个知识库的名称、文件数与分块数")
   @GetMapping("/bases")
   public ApiResponse<List<KnowledgeBaseVO>> listKnowledgeBases() {
     return ApiResponse.success(knowledgeService.listKnowledgeBases());
@@ -89,6 +98,9 @@ public class KnowledgeController {
    * @param dto 检索请求
    * @return 命中分块列表
    */
+  @Operation(
+      summary = "知识库语义检索",
+      description = "按问题语义检索最相关的知识分块（含来源文件标题）")
   @PostMapping("/search")
   public ApiResponse<List<KnowledgeChunkVO>> searchKnowledge(
       @Valid @RequestBody KnowledgeSearchDTO dto) {

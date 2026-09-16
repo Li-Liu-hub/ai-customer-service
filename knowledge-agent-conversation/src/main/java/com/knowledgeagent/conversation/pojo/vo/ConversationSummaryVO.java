@@ -1,4 +1,4 @@
-package com.knowledgeagent.ai.pojo.vo;
+package com.knowledgeagent.conversation.pojo.vo;
 
 import java.time.OffsetDateTime;
 

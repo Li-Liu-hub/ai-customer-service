@@ -6,6 +6,7 @@ import com.knowledgeagent.knowledge.pojo.vo.KnowledgeChunkVO;
 import com.knowledgeagent.knowledge.service.KnowledgeService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
@@ -13,6 +14,7 @@ import org.springframework.ai.tool.annotation.ToolParam;
  * 知识检索Agent工具：把RAG能力以工具形式暴露给对话模型。
  * 模型先枚举知识库了解可检索范围，再带着知识库定位做语义检索。
  */
+@Slf4j
 @RequiredArgsConstructor
 public class KnowledgeTools {
 
@@ -30,7 +32,9 @@ public class KnowledgeTools {
           "查询系统中有哪些知识库。返回每个知识库的名称、文件数和分块数。"
               + "在回答用户关于退货规则、用户权益、平台操作指南等问题之前，先调用本工具了解可检索的知识库。")
   public List<KnowledgeBaseVO> queryKnowledgeBases() {
-    return knowledgeService.listKnowledgeBases();
+    List<KnowledgeBaseVO> bases = knowledgeService.listKnowledgeBases();
+    log.info("工具调用 queryKnowledgeBases：知识库{}个", bases.size());
+    return bases;
   }
 
   /**
@@ -51,6 +55,7 @@ public class KnowledgeTools {
       @ToolParam(description = "返回分块数量，3到5", required = false) Integer topK) {
     String targetKb = kbName == null || kbName.isBlank() ? null : kbName;
     Integer limit = topK == null || topK < 1 || topK > 20 ? null : topK;
+    log.info("工具调用 searchKnowledge：query={}, kbName={}, topK={}", query, targetKb, limit);
     return knowledgeService.searchKnowledge(new KnowledgeSearchDTO(query, targetKb, limit));
   }
 }

@@ -13,7 +13,7 @@ public interface KnowledgeChunkMapper {
   /**
    * 批量写入知识切片。
    *
-   * @param chunks 切片实体列表（embedding为向量字面量字符串，metadata为JSON字符串）
+   * @param chunks 切片实体列表（embedding为向量字面量字符串）
    * @return 写入行数
    */
   int batchInsert(@Param("chunks") List<KnowledgeChunk> chunks);

@@ -19,6 +19,6 @@ public class ConversationChatRequest {
 
   /** 用户当前输入的消息。 */
   @NotBlank(message = "请输入消息")
-  @Size(max = 3000, message = "输入文字过多")
+  @Size(max = 1000, message = "输入文字过多")
   private String message;
 }

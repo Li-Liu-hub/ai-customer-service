@@ -62,6 +62,13 @@ spring:
 
     # 聊天与向量模型均已迁移到 app.ai.chat.levels / app.ai.embedding.levels（多级降级+超时）
 
+# 接口文档：启动后访问 /v3/api-docs 获取 OpenAPI 3 JSON（Apifox 可直接按 URL 一键导入全部接口），
+# 浏览器可视化入口 /swagger-ui.html；仅扫描业务包，/mcp 等非 REST 端点不会混入文档
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  packages-to-scan: com.knowledgeagent
+# 文档元信息（标题/版本/描述）不支持 yml 配置，见 OpenApiConfiguration 的 OpenAPI Bean
 
 app:
   ai:

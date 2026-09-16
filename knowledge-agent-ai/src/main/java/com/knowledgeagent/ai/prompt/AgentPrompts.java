@@ -29,16 +29,6 @@ public final class AgentPrompts {
                     - 系统消息中的交接摘要是此前对话的压缩结果，视为已知背景，不要重复询问摘要中已有的信息。\
                     """);
 
-    /** 最基本对话使用的系统提示词：无工具、无知识检索，仅做多轮问答。 */
-    public static final SystemMessage BASIC_CHAT_SYSTEM = new SystemMessage(
-            """
-                    你是友好的中文助手，进行无工具的多轮问答。
-
-                    ## 回答规则
-                    - 结合对话历史理解上下文，直接回答用户的当前问题。
-                    - 回答准确、简洁、自然。\
-                    """);
-
     /** 根据用户第一条消息生成会话标题时使用的系统提示词。 */
     public static final SystemMessage TITLE_SYSTEM = new SystemMessage(
             """

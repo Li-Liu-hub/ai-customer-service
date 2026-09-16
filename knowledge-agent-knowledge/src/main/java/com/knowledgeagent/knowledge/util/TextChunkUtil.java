@@ -3,10 +3,6 @@ package com.knowledgeagent.knowledge.util;
 import com.knowledgeagent.common.config.TextChunkProperties;
 import com.knowledgeagent.common.exception.error.KnowledgeError;
 import com.knowledgeagent.knowledge.pojo.enums.DocumentType;
-import com.knuddels.jtokkit.Encodings;
-import com.knuddels.jtokkit.api.Encoding;
-import com.knuddels.jtokkit.api.EncodingRegistry;
-import com.knuddels.jtokkit.api.ModelType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,13 +12,6 @@ import java.util.List;
  * RAW_DOC：先按标题/水平线切成结构块，再贪心合并相邻块到目标长度，超长块按句切分并保留重叠。
  */
 public final class TextChunkUtil {
-
-  /** jtokkit编码注册表（cl100k_base），用于统计分块Token数量。 */
-  private static final EncodingRegistry ENCODING_REGISTRY = Encodings.newDefaultEncodingRegistry();
-
-  /** Token统计使用的编码（与OpenAI cl100k_base对齐，中文按近似值估算）。 */
-  private static final Encoding ENCODING =
-      ENCODING_REGISTRY.getEncodingForModel(ModelType.GPT_4O_MINI);
 
   /** 句子边界正则：中文句号/问号/叹号/分号、英文对应符号与换行。 */
   private static final String SENTENCE_BOUNDARY = "[。！？!?；;\n]";
@@ -62,19 +51,6 @@ public final class TextChunkUtil {
       throw KnowledgeError.TEXT_CHUNK_FAILED.exception();
     }
     return chunks;
-  }
-
-  /**
-   * 统计文本的Token数量（cl100k_base编码，用于入库时落库token_count）。
-   *
-   * @param text 待统计文本
-   * @return Token数量；文本为空时返回0
-   */
-  public static int countTokens(String text) {
-    if (text == null || text.isEmpty()) {
-      return 0;
-    }
-    return ENCODING.countTokens(text);
   }
 
   /**

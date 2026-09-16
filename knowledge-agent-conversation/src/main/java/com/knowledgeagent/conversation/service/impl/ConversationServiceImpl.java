@@ -2,6 +2,7 @@ package com.knowledgeagent.conversation.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.knowledgeagent.common.exception.error.ConversationError;
+import com.knowledgeagent.common.util.TokenEstimateUtil;
 import com.knowledgeagent.conversation.config.ConversationProperties;
 import com.knowledgeagent.conversation.mapper.ConversationMapper;
 import com.knowledgeagent.conversation.mapper.MessageMapper;
@@ -69,6 +70,12 @@ public class ConversationServiceImpl implements ConversationService {
   }
 
   @Override
+  public List<Message> getActiveMessages(Long conversationId) {
+    Conversation conversation = getConversation(conversationId);
+    return getMessagesAfter(conversationId, conversation.getSummarizedUntilId());
+  }
+
+  @Override
   public List<Conversation> listRecentConversations(int limit) {
     int clampedLimit = Math.max(1, Math.min(limit, 200));
     return conversationMapper.selectRecent(clampedLimit);
@@ -79,6 +86,37 @@ public class ConversationServiceImpl implements ConversationService {
       Long conversationId, String summary, Long summarizedUntilId, int summaryTokens) {
     conversationMapper.updateSummaryAndWatermark(
         conversationId, summary, summarizedUntilId, summaryTokens);
+  }
+
+  @Override
+  public boolean isContextBudgetReached(
+      Long conversationId, int windowTokens, double triggerRatio) {
+    Conversation conversation = getConversation(conversationId);
+    List<Message> active = getMessagesAfter(conversationId, conversation.getSummarizedUntilId());
+    int total = TokenEstimateUtil.countTokens(conversation.getSummary()) + activeTokens(active);
+    return total > (int) (windowTokens * triggerRatio);
+  }
+
+  @Override
+  public List<Message> selectMessagesForCompression(
+      Long conversationId, int windowTokens, double targetRatio) {
+    Conversation conversation = getConversation(conversationId);
+    List<Message> active = getMessagesAfter(conversationId, conversation.getSummarizedUntilId());
+    int activeQuota = (int) (windowTokens * targetRatio / 2);
+    int activeTotal = activeTokens(active);
+    int foldCount;
+    if (activeTotal > activeQuota) {
+      foldCount = 0;
+      int kept = activeTotal;
+      while (foldCount < active.size() - 1 && kept > activeQuota) {
+        kept -= messageTokens(active.get(foldCount));
+        foldCount++;
+      }
+    } else {
+      // 活跃侧已在配额内，超限来自摘要自身：除当前轮外全部折叠，靠摘要提示词控制新摘要长度
+      foldCount = active.size() - 1;
+    }
+    return foldCount <= 0 ? List.of() : List.copyOf(active.subList(0, foldCount));
   }
 
   @Override
@@ -96,5 +134,37 @@ public class ConversationServiceImpl implements ConversationService {
   @Override
   public void completeProcessing(Long conversationId) {
     conversationMapper.completeProcessing(conversationId, OffsetDateTime.now());
+  }
+
+  /**
+   * 估算单轮消息（用户消息+AI回复）的Token数：优先使用落库的Token值，缺失时回退实时估算。
+   *
+   * @param message 消息轮
+   * @return 估算Token数
+   */
+  private static int messageTokens(Message message) {
+    int userTokens = message.getUserTokens() == null ? 0 : message.getUserTokens();
+    if (userTokens <= 0) {
+      userTokens = TokenEstimateUtil.countTokens(message.getUserMessage());
+    }
+    int aiTokens = message.getAiTokens() == null ? 0 : message.getAiTokens();
+    if (aiTokens <= 0 && message.getAiMessage() != null) {
+      aiTokens = TokenEstimateUtil.countTokens(message.getAiMessage());
+    }
+    return userTokens + aiTokens;
+  }
+
+  /**
+   * 估算消息列表的总Token数。
+   *
+   * @param messages 消息列表
+   * @return 估算Token数
+   */
+  private static int activeTokens(List<Message> messages) {
+    int total = 0;
+    for (Message message : messages) {
+      total += messageTokens(message);
+    }
+    return total;
   }
 }
